@@ -7,44 +7,36 @@ description: Use when you have a spec or requirements for a multi-step task, bef
 
 ## Vue d'ensemble
 
-Écris des plans d'implémentation complets en supposant que l'ingénieur n'a aucun contexte de notre codebase et un goût douteux. Documente tout ce qu'il doit savoir : quels fichiers toucher pour chaque tâche, le code, les tests, la doc qu'il pourrait devoir consulter, comment tester. Donne-lui tout le plan sous forme de tâches en petites bouchées. DRY. YAGNI. TDD. Commits fréquents.
-
-Suppose que c'est un développeur compétent, mais qui ne connaît presque rien à notre outillage ni à notre domaine problème. Suppose qu'il ne maîtrise pas très bien la conception de tests.
+Écris des plans d'implémentation complets en supposant que l'ingénieur n'a aucun contexte de notre codebase et un goût douteux : un développeur compétent qui ne connaît presque rien à notre outillage, notre domaine, ni la conception de tests. Documente tout — quels fichiers toucher par tâche, le code, les tests, la doc à consulter, comment tester — en tâches en petites bouchées. DRY. YAGNI. TDD. Commits fréquents.
 
 **Annonce au départ :** "I'm using the writing-plans skill to create the implementation plan."
 
-**Contexte :** Si tu travailles dans un worktree isolé, il aurait dû être créé via le skill `superpowers:using-git-worktrees` au moment de l'exécution.
+**Contexte :** Un worktree isolé, si utilisé, aurait dû être créé via le skill `superpowers:using-git-worktrees` à l'exécution.
 
-**Sauvegarde les plans dans :** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
-- (Les préférences de l'utilisateur sur l'emplacement du plan priment sur ce défaut)
+**Sauvegarde les plans dans :** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md` (les préférences de l'utilisateur priment sur ce défaut)
 
 ## Vérification de périmètre
 
-Si la spec couvre plusieurs sous-systèmes indépendants, elle aurait dû être découpée en specs de sous-projets pendant le brainstorming. Si ce n'est pas le cas, suggère de découper en plans séparés — un par sous-système. Chaque plan doit produire un logiciel fonctionnel et testable à lui seul.
+Si la spec couvre plusieurs sous-systèmes indépendants, elle aurait dû être découpée en specs de sous-projets pendant le brainstorming. Sinon, suggère de découper en plans séparés — un par sous-système, chacun produisant un logiciel fonctionnel et testable à lui seul.
 
 ## Structure des fichiers
 
-Avant de définir les tâches, cartographie quels fichiers seront créés ou modifiés et de quoi chacun est responsable. C'est là que les décisions de décomposition se figent.
+Avant de définir les tâches, cartographie quels fichiers seront créés ou modifiés et leur responsabilité — c'est là que les décisions de décomposition se figent.
 
-- Conçois des unités aux frontières claires et interfaces bien définies. Chaque fichier doit avoir une seule responsabilité claire.
-- Tu raisonnes le mieux sur du code que tu peux tenir en contexte d'un coup, et tes éditions sont plus fiables quand les fichiers sont ciblés. Préfère des fichiers petits et ciblés à de gros fichiers qui en font trop.
-- Les fichiers qui changent ensemble doivent vivre ensemble. Découpe par responsabilité, pas par couche technique.
-- Dans les codebases existantes, suis les patterns établis. Si la codebase utilise de gros fichiers, ne restructure pas unilatéralement — mais si un fichier que tu modifies est devenu ingérable, inclure un découpage dans le plan est raisonnable.
+- Conçois des unités aux frontières claires et interfaces bien définies ; chaque fichier a une seule responsabilité claire.
+- Tes éditions sont plus fiables quand les fichiers sont ciblés : préfère les petits fichiers aux gros qui en font trop.
+- Les fichiers qui changent ensemble vivent ensemble. Découpe par responsabilité, pas par couche technique.
+- Dans les codebases existantes, suis les patterns établis ; ne restructure pas unilatéralement, mais si un fichier que tu modifies est devenu ingérable, inclure un découpage est raisonnable.
 
-Cette structure informe la décomposition en tâches. Chaque tâche doit produire des changements autonomes qui ont du sens indépendamment.
+Chaque tâche produit des changements autonomes ayant du sens indépendamment.
 
 ## Bien dimensionner les tâches
 
-Une tâche est la plus petite unité qui porte son propre cycle de test et qui mérite le gate d'un relecteur neuf. Pour tracer les frontières de tâche : replie l'installation, la configuration, le squelette et les étapes de documentation dans la tâche dont le livrable en a besoin ; ne découpe que là où un relecteur pourrait raisonnablement rejeter une tâche tout en approuvant sa voisine. Chaque tâche se termine par un livrable testable indépendamment.
+Une tâche est la plus petite unité qui porte son propre cycle de test et mérite le gate d'un relecteur neuf. Replie installation, configuration, squelette et documentation dans la tâche dont le livrable en a besoin ; ne découpe que là où un relecteur pourrait rejeter une tâche tout en approuvant sa voisine. Chaque tâche se termine par un livrable testable indépendamment.
 
 ## Granularité en petites bouchées
 
-**Chaque étape est une action (2-5 minutes) :**
-- « Écrire le test qui échoue » — étape
-- « L'exécuter pour vérifier qu'il échoue » — étape
-- « Implémenter le code minimal pour faire passer le test » — étape
-- « Exécuter les tests et vérifier qu'ils passent » — étape
-- « Commiter » — étape
+**Chaque étape est une action (2-5 minutes) :** « écrire le test qui échoue », « l'exécuter pour vérifier qu'il échoue », « implémenter le code minimal », « exécuter les tests et vérifier qu'ils passent », « commiter » — chacune une étape.
 
 ## En-tête du document de plan
 
@@ -132,15 +124,15 @@ Chaque étape doit contenir le contenu réel dont un ingénieur a besoin. Ce son
 
 ## Auto-revue
 
-Après avoir écrit le plan complet, regarde la spec avec un œil neuf et confronte le plan à elle. C'est une checklist que tu exécutes toi-même — pas une délégation à un subagent.
+Après avoir écrit le plan complet, confronte-le à la spec avec un œil neuf. Checklist que tu exécutes toi-même — pas une délégation à un subagent.
 
-**1. Couverture de la spec :** parcours chaque section/besoin de la spec. Peux-tu pointer une tâche qui l'implémente ? Liste les manques.
+**1. Couverture de la spec :** pour chaque section/besoin, peux-tu pointer une tâche qui l'implémente ? Liste les manques.
 
-**2. Chasse aux placeholders :** cherche dans ton plan les red flags — n'importe lequel des patterns de la section « Pas de placeholders » ci-dessus. Corrige-les.
+**2. Chasse aux placeholders :** cherche les red flags de « Pas de placeholders » ci-dessus. Corrige-les.
 
-**3. Cohérence des types :** les types, signatures de méthodes et noms de propriétés utilisés dans les tâches ultérieures correspondent-ils à ce que tu as défini dans les tâches antérieures ? Une fonction appelée `clearLayers()` en Task 3 mais `clearFullLayers()` en Task 7 est un bug.
+**3. Cohérence des types :** les types, signatures et noms utilisés dans les tâches ultérieures correspondent-ils à ce que tu as défini avant ? `clearLayers()` en Task 3 mais `clearFullLayers()` en Task 7 est un bug.
 
-Si tu trouves des problèmes, corrige-les en ligne. Pas besoin de re-relire — corrige et avance. Si tu trouves un besoin de la spec sans tâche, ajoute la tâche.
+Corrige en ligne, pas besoin de re-relire. Un besoin de la spec sans tâche → ajoute la tâche.
 
 ## Passage à l'exécution
 
@@ -154,10 +146,5 @@ Après avoir sauvegardé le plan, propose le choix d'exécution :
 
 **Which approach?"**
 
-**Si Subagent-Driven est choisi :**
-- **REQUIRED SUB-SKILL :** Use superpowers:subagent-driven-development
-- Un subagent neuf par tâche + revue en deux étapes
-
-**Si Inline Execution est choisi :**
-- **REQUIRED SUB-SKILL :** Use superpowers:executing-plans
-- Exécution par lots avec checkpoints pour revue
+- **Subagent-Driven :** REQUIRED SUB-SKILL Use superpowers:subagent-driven-development — un subagent neuf par tâche + revue en deux étapes
+- **Inline Execution :** REQUIRED SUB-SKILL Use superpowers:executing-plans — exécution par lots avec checkpoints

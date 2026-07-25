@@ -5,7 +5,7 @@ description: Use when completing tasks, implementing major features, or before m
 
 # Demander une revue de code
 
-Dépêche un sous-agent relecteur pour repérer les problèmes avant qu'ils ne se propagent. Le relecteur reçoit un contexte précisément préparé pour l'évaluation — jamais l'historique de ta session.
+Dépêche un sous-agent relecteur pour repérer les problèmes tôt. Il reçoit un contexte précisément préparé — jamais l'historique de ta session.
 
 **Principe fondamental :** relis tôt, relis souvent.
 
@@ -48,28 +48,11 @@ Dépêche un sous-agent `general-purpose` en remplissant le gabarit dans [code-r
 ## Exemple
 
 ```
-[Just completed Task 2: Add verification function]
-
-You: Let me request code review before proceeding.
-
-BASE_SHA=$(git log --oneline | grep "Task 1" | head -1 | awk '{print $1}')
-HEAD_SHA=$(git rev-parse HEAD)
-
-[Dispatch code reviewer subagent]
-  DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
-  PLAN_OR_REQUIREMENTS: Task 2 from docs/superpowers/plans/deployment-plan.md
-  BASE_SHA: a7981ec
-  HEAD_SHA: 3df7661
-
-[Subagent returns]:
-  Strengths: Clean architecture, real tests
-  Issues:
-    Important: Missing progress indicators
-    Minor: Magic number (100) for reporting interval
-  Assessment: Ready to proceed
-
-You: [Fix progress indicators]
-[Continue to Task 3]
+[Task 2 terminée] → BASE_SHA/HEAD_SHA récupérés → dispatch relecteur
+  DESCRIPTION: verifyIndex()/repairIndex() avec 4 types d'erreurs
+  PLAN_OR_REQUIREMENTS: Task 2 du plan
+Retour: Important: manque indicateurs de progression ; Minor: magic number (100)
+→ [Corrige Important] → continue Task 3
 ```
 
 ## Rationalisations courantes

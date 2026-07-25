@@ -15,16 +15,9 @@ description: À utiliser pour implémenter toute fonctionnalité ou correction d
 
 ## Quand l'utiliser
 
-**Toujours :**
-- Nouvelles fonctionnalités
-- Corrections de bugs
-- Refactorisation
-- Changements de comportement
+**Toujours :** nouvelles fonctionnalités, corrections de bugs, refactorisation, changements de comportement.
 
-**Exceptions (demande à ton partenaire humain) :**
-- Prototypes jetables
-- Code généré
-- Fichiers de configuration
+**Exceptions (demande à ton partenaire humain) :** prototypes jetables, code généré, fichiers de configuration.
 
 Tu penses « je saute le TDD juste cette fois » ? Stop. C'est une rationalisation.
 
@@ -46,7 +39,7 @@ Réimplémente à neuf à partir des tests. Point.
 
 ## Rouge-Vert-Refactor
 
-Cycle : RED (écrire un test qui échoue) → vérifier qu'il échoue correctement → GREEN (code minimal) → vérifier qu'il passe et que tout est vert → REFACTOR (nettoyer en restant vert) → tâche suivante. Si le test échoue pour une mauvaise raison, retourne à RED ; si le code ne passe pas, reste en GREEN.
+Cycle : RED (test qui échoue) → vérifier qu'il échoue correctement → GREEN (code minimal) → vérifier qu'il passe, tout vert → REFACTOR (nettoyer en restant vert) → tâche suivante. Test qui échoue pour une mauvaise raison → retour à RED ; code qui ne passe pas → reste en GREEN.
 
 ### RED - Écrire un test qui échoue
 
@@ -56,14 +49,8 @@ Cycle : RED (écrire un test qui échoue) → vérifier qu'il échoue correcteme
 ```typescript
 test('retries failed operations 3 times', async () => {
   let attempts = 0;
-  const operation = () => {
-    attempts++;
-    if (attempts < 3) throw new Error('fail');
-    return 'success';
-  };
-
-  const result = await retryOperation(operation);
-
+  const op = () => { attempts++; if (attempts < 3) throw new Error('fail'); return 'success'; };
+  const result = await retryOperation(op);
   expect(result).toBe('success');
   expect(attempts).toBe(3);
 });
@@ -71,24 +58,9 @@ test('retries failed operations 3 times', async () => {
 Nom clair, teste un comportement réel, une seule chose
 </Good>
 
-<Bad>
-```typescript
-test('retry works', async () => {
-  const mock = jest.fn()
-    .mockRejectedValueOnce(new Error())
-    .mockRejectedValueOnce(new Error())
-    .mockResolvedValueOnce('success');
-  await retryOperation(mock);
-  expect(mock).toHaveBeenCalledTimes(3);
-});
-```
-Nom vague, teste le mock et non le code
-</Bad>
+Mauvais : `test('retry works')` avec un `jest.fn()` mocké — nom vague, teste le mock et non le code.
 
-**Exigences :**
-- Un comportement
-- Nom clair
-- Code réel (pas de mocks sauf inévitable)
+**Exigences :** un comportement, nom clair, code réel (pas de mocks sauf inévitable).
 
 ### Vérifier RED - Regarde-le échouer
 
@@ -98,50 +70,13 @@ Nom vague, teste le mock et non le code
 npm test path/to/test.test.ts
 ```
 
-Confirme :
-- Le test échoue (n'erre pas)
-- Le message d'échec est celui attendu
-- Il échoue parce que la fonctionnalité manque (pas à cause d'une faute de frappe)
+Confirme : le test échoue (n'erre pas) ; le message d'échec est celui attendu ; il échoue parce que la fonctionnalité manque (pas à cause d'une faute de frappe).
 
-**Le test passe ?** Tu testes un comportement existant. Corrige le test.
-
-**Le test erre ?** Corrige l'erreur, relance jusqu'à ce qu'il échoue correctement.
+**Le test passe ?** Tu testes un comportement existant. Corrige le test. **Le test erre ?** Corrige l'erreur, relance jusqu'à ce qu'il échoue correctement.
 
 ### GREEN - Code minimal
 
-Écris le code le plus simple qui fait passer le test.
-
-<Good>
-```typescript
-async function retryOperation<T>(fn: () => Promise<T>): Promise<T> {
-  for (let i = 0; i < 3; i++) {
-    try {
-      return await fn();
-    } catch (e) {
-      if (i === 2) throw e;
-    }
-  }
-  throw new Error('unreachable');
-}
-```
-Juste assez pour passer
-</Good>
-
-<Bad>
-```typescript
-async function retryOperation<T>(
-  fn: () => Promise<T>,
-  options?: {
-    maxRetries?: number;
-    backoff?: 'linear' | 'exponential';
-    onRetry?: (attempt: number) => void;
-  }
-): Promise<T> {
-  // YAGNI
-}
-```
-Sur-conçu
-</Bad>
+Écris le code le plus simple qui fait passer le test — bon : une boucle `for (i<3)` avec `try/return await fn()` et `throw` au dernier essai, juste assez pour passer. Mauvais : une signature avec `options?: { maxRetries, backoff, onRetry }` — sur-conçu, YAGNI.
 
 N'ajoute pas de fonctionnalités, ne refactorise pas d'autre code, n'« améliore » rien au-delà du test.
 
@@ -153,23 +88,13 @@ N'ajoute pas de fonctionnalités, ne refactorise pas d'autre code, n'« amélior
 npm test path/to/test.test.ts
 ```
 
-Confirme :
-- Le test passe
-- Les autres tests passent toujours
-- Sortie impeccable (aucune erreur, aucun avertissement)
+Confirme : le test passe ; les autres tests passent toujours ; sortie impeccable (aucune erreur, aucun avertissement).
 
-**Le test échoue ?** Corrige le code, pas le test.
-
-**D'autres tests échouent ?** Corrige maintenant.
+**Le test échoue ?** Corrige le code, pas le test. **D'autres tests échouent ?** Corrige maintenant.
 
 ### REFACTOR - Nettoyer
 
-Uniquement après le vert :
-- Supprimer la duplication
-- Améliorer les noms
-- Extraire des helpers
-
-Garde les tests verts. N'ajoute pas de comportement.
+Uniquement après le vert : supprimer la duplication, améliorer les noms, extraire des helpers. Garde les tests verts. N'ajoute pas de comportement.
 
 ### Répéter
 
@@ -223,43 +148,6 @@ Quand tu écris ou modifies un test, lis [writing-good-tests.md](writing-good-te
 
 **Tout cela signifie : supprime le code. Recommence avec le TDD.**
 
-## Exemple : correction de bug
-
-**Bug :** email vide accepté
-
-**RED**
-```typescript
-test('rejects empty email', async () => {
-  const result = await submitForm({ email: '' });
-  expect(result.error).toBe('Email required');
-});
-```
-
-**Vérifier RED**
-```bash
-$ npm test
-FAIL: expected 'Email required', got undefined
-```
-
-**GREEN**
-```typescript
-function submitForm(data: FormData) {
-  if (!data.email?.trim()) {
-    return { error: 'Email required' };
-  }
-  // ...
-}
-```
-
-**Vérifier GREEN**
-```bash
-$ npm test
-PASS
-```
-
-**REFACTOR**
-Extraire la validation pour plusieurs champs si besoin.
-
 ## Checklist de vérification
 
 Avant de marquer le travail comme terminé :
@@ -286,9 +174,7 @@ Impossible de cocher toutes les cases ? Tu as sauté le TDD. Recommence.
 
 ## Intégration du débogage
 
-Un bug trouvé ? Écris un test qui échoue et le reproduit. Suis le cycle TDD. Le test prouve la correction et prévient la régression.
-
-Ne corrige jamais un bug sans test.
+Un bug trouvé ? Écris un test qui échoue et le reproduit. Suis le cycle TDD. Le test prouve la correction et prévient la régression. Ne corrige jamais un bug sans test.
 
 ## Règle finale
 

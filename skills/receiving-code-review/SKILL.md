@@ -7,9 +7,9 @@ description: Use when receiving code review feedback, before implementing sugges
 
 ## Vue d'ensemble
 
-Une revue de code appelle une évaluation technique, pas une performance émotionnelle.
+Une revue appelle une évaluation technique, pas une performance émotionnelle.
 
-**Principe fondamental :** vérifier avant d'implémenter. Demander avant de supposer. La justesse technique passe avant le confort social.
+**Principe fondamental :** vérifier avant d'implémenter, demander avant de supposer. La justesse technique passe avant le confort social.
 
 ## Le schéma de réponse
 
@@ -59,10 +59,8 @@ You understand 1,2,3,6. Unclear on 4,5.
 ## Traitement selon la source
 
 ### De ton partenaire humain
-- **De confiance** — implémente après avoir compris
-- **Demande quand même** si le périmètre est flou
-- **Pas d'accord performatif**
-- **Passe à l'action** ou à un accusé de réception technique
+- **De confiance** — implémente après avoir compris ; demande quand même si le périmètre est flou
+- **Pas d'accord performatif** ; passe à l'action ou à un accusé de réception technique
 
 ### De relecteurs externes
 ```
@@ -83,7 +81,7 @@ IF conflicts with your human partner's prior decisions:
   Stop and discuss with your human partner first
 ```
 
-**Règle de ton partenaire humain :** « Retour externe — sois sceptique, mais vérifie soigneusement »
+**Règle de ton partenaire humain :** « Retour externe — sois sceptique, mais vérifie »
 
 ## Contrôle YAGNI pour les fonctionnalités « professionnelles »
 
@@ -102,10 +100,7 @@ IF reviewer suggests "implementing properly":
 ```
 FOR multi-item feedback:
   1. Clarify anything unclear FIRST
-  2. Then implement in this order:
-     - Blocking issues (breaks, security)
-     - Simple fixes (typos, imports)
-     - Complex fixes (refactoring, logic)
+  2. Implement: blocking (breaks, security) → simple (typos, imports) → complex (refactor, logic)
   3. Test each fix individually
   4. Verify no regressions
 ```
@@ -116,17 +111,15 @@ Conteste quand :
 - La suggestion casse une fonctionnalité existante
 - Le relecteur n'a pas tout le contexte
 - Ça viole YAGNI (fonctionnalité inutilisée)
-- C'est techniquement incorrect pour cette stack
-- Il existe des raisons de legacy/compatibilité
+- C'est techniquement incorrect pour cette stack, ou il existe des raisons de legacy/compatibilité
 - Ça entre en conflit avec les décisions d'architecture de ton partenaire humain
 
 **Comment contester :**
-- Utilise un raisonnement technique, pas de la défensive
-- Pose des questions précises
+- Raisonnement technique, pas de la défensive ; questions précises
 - Réfère-toi à des tests/du code qui marchent
 - Implique ton partenaire humain si c'est architectural
 
-**Si tu es mal à l'aise de contester à voix haute :** nomme cette tension, puis signale à ton partenaire le problème que tu as vu. Il appréciera ton honnêteté.
+**Si tu es mal à l'aise de contester :** nomme la tension, puis signale à ton partenaire le problème vu. Il appréciera ton honnêteté.
 
 ## Accuser réception d'un retour correct
 
@@ -143,9 +136,7 @@ Quand le retour EST correct :
 ❌ ANY gratitude expression
 ```
 
-**Pourquoi pas de remerciements :** les actes parlent. Corrige, c'est tout. Le code lui-même montre que tu as entendu le retour.
-
-**Si tu te surprends à écrire « Merci » :** SUPPRIME-LE. Énonce la correction à la place.
+**Pourquoi pas de remerciements :** les actes parlent. Le code montre que tu as entendu le retour. Si tu te surprends à écrire « Merci » : SUPPRIME-LE, énonce la correction.
 
 ## Corriger élégamment ta contestation
 
@@ -158,7 +149,6 @@ Si tu as contesté à tort :
 ❌ Defending why you pushed back
 ❌ Over-explaining
 ```
-
 Énonce la correction factuellement et passe à la suite.
 
 ## Erreurs courantes
@@ -173,31 +163,13 @@ Si tu as contesté à tort :
 | Implémentation partielle | Clarifie tous les points d'abord |
 | Impossible à vérifier, on continue quand même | Énonce la limite, demande une direction |
 
-## Exemples réels
-
-**Accord performatif (mauvais) :**
-```
-Reviewer: "Remove legacy code"
-❌ "You're absolutely right! Let me remove that..."
-```
+## Exemple réel
 
 **Vérification technique (bon) :**
 ```
 Reviewer: "Remove legacy code"
+❌ "You're absolutely right! Let me remove that..."
 ✅ "Checking... build target is 10.15+, this API needs 13+. Need legacy for backward compat. Current impl has wrong bundle ID - fix it or drop pre-13 support?"
-```
-
-**YAGNI (bon) :**
-```
-Reviewer: "Implement proper metrics tracking with database, date filters, CSV export"
-✅ "Grepped codebase - nothing calls this endpoint. Remove it (YAGNI)? Or is there usage I'm missing?"
-```
-
-**Point peu clair (bon) :**
-```
-ton partenaire humain : "Fix items 1-6"
-You understand 1,2,3,6. Unclear on 4,5.
-✅ "Understand 1,2,3,6. Need clarification on 4 and 5 before implementing."
 ```
 
 ## Réponses aux fils de discussion GitHub

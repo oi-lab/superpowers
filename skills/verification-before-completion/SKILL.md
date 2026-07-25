@@ -5,11 +5,7 @@ description: À utiliser au moment de déclarer un travail terminé, corrigé ou
 
 # Vérification avant de conclure
 
-## Vue d'ensemble
-
 **Principe fondamental :** des preuves avant les affirmations, toujours.
-
-**Violer la lettre de cette règle, c'est violer son esprit.**
 
 ## La loi d'airain
 
@@ -19,7 +15,7 @@ AUCUNE AFFIRMATION DE COMPLÉTION SANS PREUVE DE VÉRIFICATION FRAÎCHE
 
 Si tu n'as pas lancé la commande de vérification dans ce message, tu ne peux pas affirmer que ça passe.
 
-## La fonction de contrôle (gate)
+## La fonction de contrôle
 
 ```
 AVANT d'affirmer un statut ou d'exprimer une satisfaction :
@@ -50,7 +46,7 @@ Sauter une étape = mentir, pas vérifier
 ## Signaux d'alarme — STOP
 
 - Utiliser « devrait », « probablement », « semble »
-- Exprimer une satisfaction avant vérification (« Super ! », « Parfait ! », « Fini ! », etc.)
+- Exprimer une satisfaction avant vérification (« Super ! », « Parfait ! », « Fini ! »…)
 - Sur le point de committer/pusher/faire une PR sans vérification
 - Faire confiance aux rapports de succès d'un agent
 - S'appuyer sur une vérification partielle
@@ -71,50 +67,15 @@ Sauter une étape = mentir, pas vérifier
 | « Une vérification partielle suffit » | Le partiel ne prouve rien |
 | « Mots différents donc la règle ne s'applique pas » | L'esprit prime sur la lettre |
 
-## Motifs clés
+## Motif clé — test de régression (TDD Rouge-Vert)
 
-**Tests :**
-```
-✅ [Lance la commande de test] [Vois : 34/34 pass] « Tous les tests passent »
-❌ « Devrait passer maintenant » / « Semble correct »
-```
-
-**Tests de régression (TDD Rouge-Vert) :**
 ```
 ✅ Écris → Lance (pass) → Annule le correctif → Lance (DOIT ÉCHOUER) → Restaure → Lance (pass)
 ❌ « J'ai écrit un test de régression » (sans vérification rouge-vert)
 ```
 
-**Build :**
-```
-✅ [Lance le build] [Vois : exit 0] « Le build passe »
-❌ « Le linter est passé » (le linter ne vérifie pas la compilation)
-```
-
-**Exigences :**
-```
-✅ Relis le plan → Crée une checklist → Vérifie chaque point → Rapporte les manques ou la complétion
-❌ « Tests passent, phase terminée »
-```
-
-**Délégation à un agent :**
-```
-✅ L'agent rapporte succès → Vérifie le diff VCS → Vérifie les changements → Rapporte l'état réel
-❌ Faire confiance au rapport de l'agent
-```
-
 ## Quand l'appliquer
 
-**TOUJOURS avant :**
-- TOUTE variante d'affirmation de succès/complétion
-- TOUTE expression de satisfaction
-- TOUTE déclaration positive sur l'état du travail
-- Commit, création de PR, complétion de tâche
-- Passer à la tâche suivante
-- Déléguer à des agents
+**TOUJOURS avant :** toute affirmation de succès/complétion, expression de satisfaction, déclaration positive sur l'état du travail ; commit, PR, complétion de tâche ; passage à la tâche suivante ; délégation à des agents.
 
-**La règle s'applique à :**
-- Les phrases exactes
-- Les paraphrases et synonymes
-- Les implications de succès
-- TOUTE communication suggérant complétion/exactitude
+**S'applique aux :** phrases exactes, paraphrases et synonymes, implications de succès, TOUTE communication suggérant complétion/exactitude.

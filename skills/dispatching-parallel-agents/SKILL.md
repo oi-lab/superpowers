@@ -7,20 +7,20 @@ description: À utiliser UNIQUEMENT quand ton partenaire humain demande explicit
 
 ## Vue d'ensemble
 
-Tu délègues des tâches à des agents spécialisés au contexte isolé. En façonnant précisément leurs instructions et leur contexte, tu t'assures qu'ils restent concentrés et réussissent leur tâche. Ils ne doivent jamais hériter du contexte ou de l'historique de ta session — tu construis exactement ce dont ils ont besoin. Cela préserve aussi ton propre contexte pour le travail de coordination.
+Tu délègues des tâches à des agents spécialisés au contexte isolé. En façonnant précisément leurs instructions et leur contexte, tu les gardes concentrés. Ils ne doivent jamais hériter du contexte ou de l'historique de ta session — tu construis exactement ce dont ils ont besoin. Cela préserve aussi ton propre contexte pour la coordination.
 
-Quand tu as plusieurs échecs sans rapport entre eux (fichiers de test différents, sous-systèmes différents, bugs différents), les investiguer séquentiellement fait perdre du temps. Chaque investigation est indépendante et peut se dérouler en parallèle.
+Plusieurs échecs sans rapport (fichiers de test, sous-systèmes, bugs différents) s'investiguent en parallèle : chaque investigation est indépendante.
 
-**Principe central :** déploie un agent par domaine de problème indépendant. Laisse-les travailler simultanément.
+**Principe central :** un agent par domaine de problème indépendant, travaillant simultanément.
 
 ## Quand l'utiliser
 
-Décision : plusieurs échecs indépendants → un agent par domaine de problème ; échecs liés → un seul agent investigue tout. Si les agents peuvent travailler sans état partagé → dispatch parallèle ; sinon → agents séquentiels.
+Décision : plusieurs échecs indépendants → un agent par domaine ; échecs liés → un seul agent investigue tout. Agents sans état partagé → dispatch parallèle ; sinon → séquentiel.
 
 **Utilise quand :**
 - 3+ fichiers de test échouent avec des causes racines différentes
 - Plusieurs sous-systèmes cassés indépendamment
-- Chaque problème peut se comprendre sans le contexte des autres
+- Chaque problème se comprend sans le contexte des autres
 - Aucun état partagé entre les investigations
 
 **N'utilise pas quand :**
@@ -32,12 +32,7 @@ Décision : plusieurs échecs indépendants → un agent par domaine de problèm
 
 ### 1. Identifier les domaines indépendants
 
-Groupe les échecs selon ce qui est cassé :
-- Tests du fichier A : flux d'approbation d'outils
-- Tests du fichier B : comportement de complétion par lots
-- Tests du fichier C : fonctionnalité d'abandon
-
-Chaque domaine est indépendant - corriger l'approbation d'outils n'affecte pas les tests d'abandon.
+Groupe les échecs selon ce qui est cassé (ex. fichier A : approbation d'outils ; fichier B : complétion par lots ; fichier C : abandon). Chaque domaine est indépendant — corriger l'un n'affecte pas les autres.
 
 ### 2. Créer des tâches d'agent ciblées
 
@@ -49,7 +44,7 @@ Chaque agent reçoit :
 
 ### 3. Déployer en parallèle
 
-Émets les trois dispatches de sous-agents dans la même réponse — ils s'exécutent en parallèle :
+Émets tous les dispatches dans la même réponse — ils s'exécutent en parallèle :
 
 ```text
 Subagent (general-purpose): "Fix agent-tool-abort.test.ts failures"
@@ -58,7 +53,7 @@ Subagent (general-purpose): "Fix tool-approval-race-conditions.test.ts failures"
 # All three run concurrently.
 ```
 
-Plusieurs appels de dispatch dans une réponse = exécution parallèle. Un par réponse = séquentiel.
+Plusieurs dispatches dans une réponse = parallèle. Un par réponse = séquentiel.
 
 ### 4. Revoir et intégrer
 
@@ -70,10 +65,7 @@ Quand les agents reviennent :
 
 ## Structure du prompt d'agent
 
-Un bon prompt d'agent est :
-1. **Ciblé** - Un seul domaine de problème clair
-2. **Autonome** - Tout le contexte nécessaire pour comprendre le problème
-3. **Précis sur la sortie** - Que doit retourner l'agent ?
+Un bon prompt est : **ciblé** (un seul domaine), **autonome** (tout le contexte nécessaire), **précis sur la sortie** (ce que l'agent doit retourner).
 
 ```markdown
 Fix the 3 failing tests in src/agents/agent-tool-abort.test.ts:
@@ -98,54 +90,24 @@ Return: Summary of what you found and what you fixed.
 
 ## Erreurs courantes
 
-**❌ Trop large :** « Fix all the tests » - l'agent se perd
-**✅ Précis :** « Fix agent-tool-abort.test.ts » - périmètre ciblé
-
-**❌ Sans contexte :** « Fix the race condition » - l'agent ne sait pas où
-**✅ Avec contexte :** colle les messages d'erreur et les noms de test
-
-**❌ Sans contraintes :** l'agent pourrait tout refactoriser
-**✅ Avec contraintes :** « Do NOT change production code » ou « Fix tests only »
-
-**❌ Sortie vague :** « Fix it » - tu ne sais pas ce qui a changé
-**✅ Précise :** « Return summary of root cause and changes »
+| ❌ | ✅ |
+|----|----|
+| Trop large : « Fix all the tests » — l'agent se perd | Précis : « Fix agent-tool-abort.test.ts » |
+| Sans contexte : « Fix the race condition » | Avec contexte : colle erreurs et noms de test |
+| Sans contraintes : l'agent refactorise tout | Avec contraintes : « Do NOT change production code » |
+| Sortie vague : « Fix it » | Précise : « Return summary of root cause and changes » |
 
 ## Quand NE PAS l'utiliser
 
-**Échecs liés :** corriger l'un peut corriger les autres - investigue-les ensemble d'abord
-**Besoin du contexte complet :** comprendre exige de voir tout le système
-**Débogage exploratoire :** tu ne sais pas encore ce qui est cassé
-**État partagé :** les agents interféreraient (éditer les mêmes fichiers, utiliser les mêmes ressources)
-
-## Exemple réel de session
-
-**Scénario :** 6 échecs de test sur 3 fichiers après une refactorisation majeure
-
-**Échecs :**
-- agent-tool-abort.test.ts : 3 échecs (problèmes de timing)
-- batch-completion-behavior.test.ts : 2 échecs (outils non exécutés)
-- tool-approval-race-conditions.test.ts : 1 échec (nombre d'exécutions = 0)
-
-**Décision :** domaines indépendants - logique d'abandon séparée de la complétion par lots séparée des conditions de course
-
-**Dispatch :**
-```
-Agent 1 → Fix agent-tool-abort.test.ts
-Agent 2 → Fix batch-completion-behavior.test.ts
-Agent 3 → Fix tool-approval-race-conditions.test.ts
-```
-
-**Résultats :**
-- Agent 1 : a remplacé les timeouts par une attente basée sur les événements
-- Agent 2 : a corrigé un bug de structure d'événement (threadId au mauvais endroit)
-- Agent 3 : a ajouté une attente de la fin d'exécution asynchrone de l'outil
-
-**Intégration :** toutes les corrections indépendantes, aucun conflit, suite complète verte
+- **Échecs liés :** corriger l'un peut corriger les autres — investigue-les ensemble d'abord
+- **Besoin du contexte complet :** comprendre exige de voir tout le système
+- **Débogage exploratoire :** tu ne sais pas encore ce qui est cassé
+- **État partagé :** les agents interféreraient (mêmes fichiers, mêmes ressources)
 
 ## Vérification
 
 Après le retour des agents :
-1. **Revoir chaque résumé** - Comprends ce qui a changé
-2. **Vérifier les conflits** - Les agents ont-ils édité le même code ?
-3. **Lancer la suite complète** - Vérifie que toutes les corrections fonctionnent ensemble
-4. **Contrôle par sondage** - Les agents peuvent commettre des erreurs systématiques
+1. **Revoir chaque résumé** — comprends ce qui a changé
+2. **Vérifier les conflits** — les agents ont-ils édité le même code ?
+3. **Lancer la suite complète** — vérifie que toutes les corrections fonctionnent ensemble
+4. **Contrôle par sondage** — les agents peuvent commettre des erreurs systématiques

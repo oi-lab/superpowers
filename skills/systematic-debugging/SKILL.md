@@ -7,9 +7,7 @@ description: À utiliser face à tout bug, échec de test ou comportement inatte
 
 ## Vue d'ensemble
 
-**Principe fondamental :** TOUJOURS trouver la cause racine avant de tenter un correctif. Corriger un symptôme est un échec.
-
-**Violer la lettre de ce processus, c'est violer l'esprit du débogage.**
+**Principe fondamental :** TOUJOURS trouver la cause racine avant de tenter un correctif. Corriger un symptôme est un échec. Violer la lettre de ce processus, c'est en violer l'esprit.
 
 ## La loi d'airain
 
@@ -17,50 +15,33 @@ description: À utiliser face à tout bug, échec de test ou comportement inatte
 AUCUN CORRECTIF SANS AVOIR D'ABORD ENQUÊTÉ SUR LA CAUSE RACINE
 ```
 
-Tant que la Phase 1 n'est pas terminée, tu ne peux pas proposer de correctif.
+Tant que la Phase 1 n'est pas terminée, pas de correctif proposé.
 
 ## Quand l'utiliser
 
-Pour TOUT problème technique : échecs de test, bugs en production, comportement inattendu, problèmes de performance, échecs de build, problèmes d'intégration.
+Pour TOUT problème technique : échecs de test, bugs en production, comportement inattendu, performance, build, intégration.
 
-**Surtout quand :**
-- Tu es sous pression temporelle (l'urgence rend le devinage tentant)
-- « Juste un petit correctif rapide » semble évident
-- Tu as déjà tenté plusieurs correctifs
-- Le correctif précédent n'a pas marché
-- Tu ne comprends pas entièrement le problème
+**Surtout quand :** pression temporelle ; « correctif rapide » tentant ; plusieurs correctifs déjà tentés ; le précédent a échoué ; tu ne comprends pas tout le problème.
 
-**Ne saute pas le processus quand :**
-- Le problème semble simple (les bugs simples ont aussi une cause racine)
-- Tu es pressé (précipiter garantit le retravail)
-- Le manager veut que ce soit corrigé MAINTENANT (la méthode systématique est plus rapide que le tâtonnement)
+**Ne saute pas quand :** le problème semble simple, tu es pressé, ou le manager veut ça MAINTENANT (les bugs simples ont aussi une cause racine ; la méthode systématique bat le tâtonnement).
 
 ## Les quatre phases
 
-Tu DOIS terminer chaque phase avant de passer à la suivante.
+Termine chaque phase avant la suite.
 
 ### Phase 1 : Enquête sur la cause racine
 
 **AVANT de tenter TOUT correctif :**
 
-1. **Lis attentivement les messages d'erreur**
-   - Ne saute pas les erreurs ou avertissements
-   - Ils contiennent souvent la solution exacte
-   - Lis les stack traces en entier
-   - Note les numéros de ligne, chemins de fichier, codes d'erreur
+1. **Lis attentivement les messages d'erreur** — ne saute aucune erreur/avertissement (ils contiennent souvent la solution) ; lis les stack traces en entier ; note lignes, chemins, codes d'erreur.
 
-2. **Reproduis de façon fiable**
-   - Peux-tu le déclencher de manière fiable ? Quelles sont les étapes exactes ? Cela arrive-t-il à chaque fois ?
-   - Si non reproductible → collecte plus de données, ne devine pas
+2. **Reproduis de façon fiable** — étapes exactes ? À chaque fois ? Si non reproductible → collecte plus de données, ne devine pas.
 
-3. **Vérifie les changements récents**
-   - Qu'est-ce qui a changé et pourrait causer ça ? (git diff, commits récents, nouvelles dépendances, changements de config, différences d'environnement)
+3. **Vérifie les changements récents** — qu'est-ce qui a changé et pourrait causer ça ? (git diff, commits récents, nouvelles deps, config, env)
 
 4. **Collecte des preuves dans les systèmes multi-composants**
 
-   **QUAND le système a plusieurs composants (CI → build → signature, API → service → base de données) :**
-
-   **AVANT de proposer un correctif, ajoute de l'instrumentation de diagnostic.** Pour CHAQUE frontière entre composants : logue les données qui entrent, celles qui sortent, vérifie la propagation de l'environnement/config, contrôle l'état à chaque couche. Lance une fois pour obtenir des preuves montrant OÙ ça casse, puis identifie le composant fautif et enquête dessus spécifiquement.
+   **QUAND le système a plusieurs composants (CI → build → signature, API → service → DB) :** avant tout correctif, ajoute de l'instrumentation à CHAQUE frontière : logue entrées/sorties, vérifie la propagation env/config, contrôle l'état par couche. Lance une fois pour voir OÙ ça casse, puis enquête sur le composant fautif.
 
    **Exemple (système multi-couches) :**
    ```bash
@@ -85,92 +66,55 @@ Tu DOIS terminer chaque phase avant de passer à la suivante.
 
 5. **Trace le flux de données**
 
-   **QUAND l'erreur est profonde dans la pile d'appels :**
+   **QUAND l'erreur est profonde dans la pile d'appels :** voir `root-cause-tracing.md` dans ce répertoire pour le traçage à rebours complet.
 
-   Voir `root-cause-tracing.md` dans ce répertoire pour la technique complète de traçage à rebours.
-
-   **Version rapide :** Où naît la mauvaise valeur ? Qui a appelé ça avec la mauvaise valeur ? Continue de remonter jusqu'à la source. Corrige à la source, pas au symptôme.
+   **Version rapide :** où naît la mauvaise valeur ? Qui l'a propagée ? Remonte jusqu'à la source ; corrige là, pas au symptôme.
 
 ### Phase 2 : Analyse des motifs
 
 **Trouve le motif avant de corriger :**
 
-1. **Trouve des exemples qui fonctionnent**
-   - Repère du code similaire qui marche dans la même base de code
-   - Qu'est-ce qui fonctionne et ressemble à ce qui est cassé ?
+1. **Trouve des exemples qui fonctionnent** — du code similaire qui marche dans la base de code.
 
-2. **Compare aux références**
-   - Si tu implémentes un motif, lis l'implémentation de référence EN ENTIER
-   - Ne survole pas — lis chaque ligne
-   - Comprends le motif à fond avant de l'appliquer
+2. **Compare aux références** — si tu implémentes un motif, lis l'implémentation de référence EN ENTIER avant de l'appliquer.
 
-3. **Identifie les différences**
-   - Qu'est-ce qui diffère entre ce qui marche et ce qui est cassé ?
-   - Liste chaque différence, aussi minime soit-elle
-   - Ne suppose pas « ça ne peut pas compter »
+3. **Identifie les différences** — qu'est-ce qui diffère entre ce qui marche et ce qui est cassé ? Liste chaque différence, même minime. Ne suppose pas « ça ne peut pas compter ».
 
-4. **Comprends les dépendances**
-   - De quels autres composants cela a-t-il besoin ? Quels réglages, config, environnement ? Quelles hypothèses fait-il ?
+4. **Comprends les dépendances** — de quels composants, config, environnement dépend-il ? Quelles hypothèses fait-il ?
 
 ### Phase 3 : Hypothèse et test
 
 **Méthode scientifique :**
 
-1. **Formule une seule hypothèse**
-   - Énonce clairement : « Je pense que X est la cause racine parce que Y »
-   - Écris-la. Sois précis, pas vague.
+1. **Formule une seule hypothèse** — « X est la cause racine parce que Y ». Écris-la, précise et pas vague.
 
-2. **Teste au minimum**
-   - Fais le PLUS PETIT changement possible pour tester l'hypothèse
-   - Une variable à la fois. Ne corrige pas plusieurs choses en même temps.
+2. **Teste au minimum** — le PLUS PETIT changement possible. Une variable à la fois.
 
-3. **Vérifie avant de continuer**
-   - Ça a marché ? Oui → Phase 4
-   - Ça n'a pas marché ? Formule une NOUVELLE hypothèse
-   - N'EMPILE PAS d'autres correctifs par-dessus
+3. **Vérifie avant de continuer** — marché ? Oui → Phase 4. Non → NOUVELLE hypothèse. N'EMPILE PAS de correctifs.
 
-4. **Quand tu ne sais pas**
-   - Dis « Je ne comprends pas X ». Ne prétends pas savoir. Demande de l'aide. Cherche davantage.
+4. **Quand tu ne sais pas** — dis « Je ne comprends pas X ». Ne prétends pas savoir. Demande de l'aide.
 
 ### Phase 4 : Implémentation
 
 **Corrige la cause racine, pas le symptôme :**
 
-1. **Crée un cas de test qui échoue**
-   - Reproduction la plus simple possible, test automatisé si possible, script de test ponctuel si aucun framework
-   - OBLIGATOIRE avant de corriger
-   - Utilise le skill `superpowers:test-driven-development` pour écrire de vrais tests qui échouent
+1. **Crée un cas de test qui échoue** — reproduction la plus simple, test automatisé si possible, script ponctuel sinon. OBLIGATOIRE avant de corriger. Utilise `superpowers:test-driven-development` pour de vrais tests qui échouent.
 
-2. **Implémente un seul correctif**
-   - Traite la cause racine identifiée. UN changement à la fois.
-   - Pas d'améliorations « tant que j'y suis ». Pas de refactoring groupé.
+2. **Implémente un seul correctif** — traite la cause racine identifiée. UN changement à la fois. Pas d'améliorations « tant que j'y suis », ni refactoring groupé.
 
-3. **Vérifie le correctif**
-   - Le test passe-t-il maintenant ? Aucun autre test cassé ? Le problème est-il réellement résolu ?
-   - Utilise le skill `superpowers:verification-before-completion` avant de crier victoire
+3. **Vérifie le correctif** — le test passe-t-il ? Aucun autre test cassé ? Problème réellement résolu ? Utilise `superpowers:verification-before-completion` avant de crier victoire.
 
-4. **Si le correctif ne marche pas**
-   - STOP
-   - Compte : combien de correctifs as-tu tentés ?
-   - Si < 3 : retourne en Phase 1, réanalyse avec les nouvelles informations
-   - **Si ≥ 3 : STOP et remets l'architecture en question (étape 5 ci-dessous)**
-   - NE tente PAS un correctif nº 4 sans discussion architecturale
+4. **Si le correctif ne marche pas** — STOP. Compte les correctifs tentés. Si < 3 : retourne en Phase 1, réanalyse. **Si ≥ 3 : STOP et remets l'architecture en question (étape 5).** NE tente PAS un correctif nº 4 sans discussion architecturale.
 
 5. **Si 3 correctifs ou plus ont échoué : remets l'architecture en question**
 
-   **Motif indiquant un problème d'architecture :**
-   - Chaque correctif révèle un nouvel état partagé / couplage / problème à un endroit différent
-   - Les correctifs exigent un « refactoring massif »
-   - Chaque correctif crée de nouveaux symptômes ailleurs
+   **Motif indiquant un problème d'architecture :** chaque correctif révèle un nouvel état partagé / couplage / symptôme ailleurs ; les correctifs exigent un « refactoring massif ».
 
-   **STOP et remets en cause les fondamentaux :**
-   - Ce motif est-il fondamentalement sain ? Persiste-t-on « par pure inertie » ? Faut-il refactorer l'architecture plutôt que continuer à corriger des symptômes ?
+   **STOP et remets en cause les fondamentaux :** ce motif est-il sain ? Persiste-t-on « par pure inertie » ? Faut-il refactorer l'architecture plutôt que corriger des symptômes ?
 
-   **Discutes-en avec ton partenaire humain avant de tenter d'autres correctifs.**
+   **Discutes-en avec ton partenaire humain avant de tenter d'autres correctifs.** Ce n'est PAS une hypothèse ratée — c'est une mauvaise architecture.
 
-   Ce n'est PAS une hypothèse ratée — c'est une mauvaise architecture.
-
-## Signaux d'alarme — STOP et suis le processus
+## Signaux d'alarme — STOP
 
 Si tu te surprends à penser :
 - « Correctif rapide pour l'instant, j'enquêterai plus tard »
@@ -185,18 +129,11 @@ Si tu te surprends à penser :
 - **« Une dernière tentative de correctif » (alors que déjà 2+ tentées)**
 - **Chaque correctif révèle un nouveau problème à un endroit différent**
 
-**TOUT cela signifie : STOP. Retourne en Phase 1.**
-
-**Si 3 correctifs ou plus ont échoué :** remets l'architecture en question (voir Phase 4.5).
+**TOUT cela signifie : STOP. Retourne en Phase 1.** Si 3 correctifs ou plus ont échoué, remets l'architecture en question (voir Phase 4.5).
 
 ## Signaux de ton partenaire humain que tu t'y prends mal
 
-**Guette ces redirections :**
-- « Ça n'arrive pas ? » — Tu as supposé sans vérifier
-- « Est-ce que ça va nous montrer… ? » — Tu aurais dû ajouter de la collecte de preuves
-- « Arrête de deviner » — Tu proposes des correctifs sans comprendre
-- « Réfléchis à fond à ça » — Remets en cause les fondamentaux, pas seulement les symptômes
-- « On est bloqués ? » (frustré) — Ton approche ne marche pas
+Redirections à guetter : « Ça n'arrive pas ? » (tu as supposé sans vérifier) ; « Est-ce que ça va nous montrer… ? » (collecte des preuves) ; « Arrête de deviner » (correctifs sans comprendre) ; « Réfléchis à fond à ça » (remets en cause les fondamentaux) ; « On est bloqués ? », frustré (ton approche ne marche pas).
 
 **Quand tu vois ça :** STOP. Retourne en Phase 1.
 
@@ -224,19 +161,14 @@ Si tu te surprends à penser :
 
 ## Quand le processus révèle « pas de cause racine »
 
-Si l'enquête systématique révèle que le problème est réellement environnemental, dépendant du timing, ou externe :
-
-1. Tu as terminé le processus
-2. Documente ce que tu as investigué
-3. Implémente une gestion appropriée (retry, timeout, message d'erreur)
-4. Ajoute du monitoring/logging pour investigation future
+Si l'enquête révèle un problème réellement environnemental, de timing, ou externe : le processus est terminé — documente, implémente une gestion appropriée (retry, timeout, message d'erreur), ajoute monitoring/logging.
 
 **Mais :** 95 % des cas « pas de cause racine » sont des enquêtes incomplètes.
 
 ## Techniques d'appui
 
-Ces techniques font partie du débogage systématique et sont disponibles dans ce répertoire :
+Disponibles dans ce répertoire :
 
-- **`root-cause-tracing.md`** — Tracer les bugs à rebours dans la pile d'appels jusqu'au déclencheur initial
-- **`defense-in-depth.md`** — Ajouter de la validation à plusieurs couches après avoir trouvé la cause racine
+- **`root-cause-tracing.md`** — Tracer les bugs à rebours jusqu'au déclencheur initial
+- **`defense-in-depth.md`** — Validation à plusieurs couches après avoir trouvé la cause racine
 - **`condition-based-waiting.md`** — Remplacer les timeouts arbitraires par du polling sur condition
