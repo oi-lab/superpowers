@@ -1,441 +1,201 @@
 ---
 name: subagent-driven-development
-description: Use ONLY for large implementation plans with many independent tasks, and only when your human partner explicitly asks for subagent execution - dispatches a fresh subagent per task, which is token-intensive (opt-in). For ordinary plans, execute them yourself.
+description: À utiliser UNIQUEMENT pour de gros plans d'implémentation comportant de nombreuses tâches indépendantes, et seulement quand ton partenaire humain demande explicitement une exécution par sous-agents - déploie un sous-agent neuf par tâche, ce qui est gourmand en tokens (opt-in). Pour les plans ordinaires, exécute-les toi-même.
 ---
 
-# Subagent-Driven Development
+# Développement piloté par sous-agents
 
-Execute plan by dispatching a fresh implementer subagent per task, a task review (spec compliance + code quality) after each, and a broad whole-branch review at the end.
+Exécute un plan en déployant un sous-agent implémenteur neuf par tâche, une revue de tâche (conformité au spec + qualité du code) après chacune, et une revue large de toute la branche à la fin.
 
-**Why subagents:** You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what they need. This also preserves your own context for coordination work.
+**Pourquoi des sous-agents :** tu délègues les tâches à des agents spécialisés au contexte isolé. En façonnant précisément leurs instructions et leur contexte, tu garantis qu'ils restent concentrés et réussissent. Ils ne doivent jamais hériter du contexte ou de l'historique de ta session — tu construis exactement ce dont ils ont besoin. Cela préserve aussi ton propre contexte pour le travail de coordination.
 
-**Core principle:** Fresh subagent per task + task review (spec + quality) + broad final review = high quality, fast iteration
+**Principe central :** sous-agent neuf par tâche + revue de tâche (spec + qualité) + revue finale large = haute qualité, itération rapide
 
-**Narration:** between tool calls, narrate at most one short line — the
-ledger and the tool results carry the record.
+**Narration :** entre les appels d'outils, narre au plus une courte ligne — le registre (ledger) et les résultats d'outils portent la trace.
 
-**Continuous execution:** Do not pause to check in with your human partner between tasks. Execute all tasks from the plan without stopping. The only reasons to stop are: BLOCKED status you cannot resolve, ambiguity that genuinely prevents progress, or all tasks complete. "Should I continue?" prompts and progress summaries waste their time — they asked you to execute the plan, so execute it.
+**Exécution continue :** ne t'arrête pas pour faire un point avec ton partenaire humain entre les tâches. Exécute toutes les tâches du plan sans t'arrêter. Les seules raisons de s'arrêter sont : un statut BLOCKED que tu ne peux pas résoudre, une ambiguïté qui empêche réellement d'avancer, ou toutes les tâches terminées. Les « Dois-je continuer ? » et les résumés de progression font perdre du temps — on t'a demandé d'exécuter le plan, alors exécute-le.
 
-## When to Use
+## Quand l'utiliser
 
-```dot
-digraph when_to_use {
-    "Have implementation plan?" [shape=diamond];
-    "Tasks mostly independent?" [shape=diamond];
-    "Stay in this session?" [shape=diamond];
-    "subagent-driven-development" [shape=box];
-    "executing-plans" [shape=box];
-    "Manual execution or brainstorm first" [shape=box];
+Décision : tu as un plan d'implémentation, dont les tâches sont majoritairement indépendantes, et tu restes dans cette session → subagent-driven-development. Si tu passes en session parallèle → executing-plans. Pas de plan, ou tâches fortement couplées → exécution manuelle ou brainstorm d'abord.
 
-    "Have implementation plan?" -> "Tasks mostly independent?" [label="yes"];
-    "Have implementation plan?" -> "Manual execution or brainstorm first" [label="no"];
-    "Tasks mostly independent?" -> "Stay in this session?" [label="yes"];
-    "Tasks mostly independent?" -> "Manual execution or brainstorm first" [label="no - tightly coupled"];
-    "Stay in this session?" -> "subagent-driven-development" [label="yes"];
-    "Stay in this session?" -> "executing-plans" [label="no - parallel session"];
-}
-```
+**vs. Executing Plans (session parallèle) :**
+- Même session (pas de changement de contexte)
+- Sous-agent neuf par tâche (pas de pollution de contexte)
+- Revue après chaque tâche (conformité spec + qualité du code), revue large à la fin
+- Itération plus rapide (pas d'humain dans la boucle entre les tâches)
 
-**vs. Executing Plans (parallel session):**
-- Same session (no context switch)
-- Fresh subagent per task (no context pollution)
-- Review after each task (spec compliance + code quality), broad review at the end
-- Faster iteration (no human-in-loop between tasks)
+## Le processus
 
-## The Process
+Vue d'ensemble du flux (détaillée dans les sections suivantes) :
 
-```dot
-digraph process {
-    rankdir=TB;
-
-    subgraph cluster_per_task {
-        label="Per Task";
-        "Dispatch implementer subagent (./implementer-prompt.md)" [shape=box];
-        "Implementer asks questions?" [shape=diamond];
-        "Answer questions, provide context" [shape=box];
-        "Implementer implements, tests, commits, self-reviews" [shape=box];
-        "Generate review package, dispatch task reviewer (./task-reviewer-prompt.md)" [shape=box];
-        "Spec ✅ and quality approved?" [shape=diamond];
-        "Finding conflicts with plan text?" [shape=diamond];
-        "Ask human partner which governs" [shape=box];
-        "Fix round R of 5: R≤3 resume implementer; R≥4 fresh implementer, more capable model" [shape=box];
-        "Dispatch scoped re-review (./re-review-prompt.md)" [shape=box];
-        "All findings addressed?" [shape=diamond];
-        "R = 5?" [shape=diamond];
-        "Adjudicate each open finding" [shape=box];
-        "Any load-bearing finding?" [shape=diamond];
-        "STOP: report BLOCKED to human partner" [shape=box];
-        "Park findings in ledger with rulings" [shape=box];
-        "Append completion to ledger, mark todo complete" [shape=box];
-    }
-
-    "Setup: worktree, ledger check, read plan, pre-flight review" [shape=box];
-    "More tasks remain?" [shape=diamond];
-    "Dispatch final code reviewer (../requesting-code-review/code-reviewer.md)" [shape=box];
-    "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals" [shape=box];
-    "Final review clean: delete this plan's workspace" [shape=box];
-    "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
-
-    "Setup: worktree, ledger check, read plan, pre-flight review" -> "Dispatch implementer subagent (./implementer-prompt.md)";
-    "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer asks questions?";
-    "Implementer asks questions?" -> "Answer questions, provide context" [label="yes"];
-    "Answer questions, provide context" -> "Implementer implements, tests, commits, self-reviews";
-    "Implementer asks questions?" -> "Implementer implements, tests, commits, self-reviews" [label="no"];
-    "Implementer implements, tests, commits, self-reviews" -> "Generate review package, dispatch task reviewer (./task-reviewer-prompt.md)";
-    "Generate review package, dispatch task reviewer (./task-reviewer-prompt.md)" -> "Spec ✅ and quality approved?";
-    "Spec ✅ and quality approved?" -> "Append completion to ledger, mark todo complete" [label="yes"];
-    "Spec ✅ and quality approved?" -> "Finding conflicts with plan text?" [label="no"];
-    "Finding conflicts with plan text?" -> "Ask human partner which governs" [label="yes"];
-    "Ask human partner which governs" -> "Fix round R of 5: R≤3 resume implementer; R≥4 fresh implementer, more capable model";
-    "Finding conflicts with plan text?" -> "Fix round R of 5: R≤3 resume implementer; R≥4 fresh implementer, more capable model" [label="no"];
-    "Fix round R of 5: R≤3 resume implementer; R≥4 fresh implementer, more capable model" -> "Dispatch scoped re-review (./re-review-prompt.md)";
-    "Dispatch scoped re-review (./re-review-prompt.md)" -> "All findings addressed?";
-    "All findings addressed?" -> "Append completion to ledger, mark todo complete" [label="yes"];
-    "All findings addressed?" -> "R = 5?" [label="no"];
-    "R = 5?" -> "Fix round R of 5: R≤3 resume implementer; R≥4 fresh implementer, more capable model" [label="no - next round"];
-    "R = 5?" -> "Adjudicate each open finding" [label="yes - breaker trips"];
-    "Adjudicate each open finding" -> "Any load-bearing finding?";
-    "Any load-bearing finding?" -> "STOP: report BLOCKED to human partner" [label="yes"];
-    "Any load-bearing finding?" -> "Park findings in ledger with rulings" [label="no"];
-    "Park findings in ledger with rulings" -> "Append completion to ledger, mark todo complete";
-    "Append completion to ledger, mark todo complete" -> "More tasks remain?";
-    "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
-    "More tasks remain?" -> "Dispatch final code reviewer (../requesting-code-review/code-reviewer.md)" [label="no"];
-    "Dispatch final code reviewer (../requesting-code-review/code-reviewer.md)" -> "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals";
-    "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals" -> "Final review clean: delete this plan's workspace";
-    "Final review clean: delete this plan's workspace" -> "Use superpowers:finishing-a-development-branch";
-}
-```
+1. **Setup** : worktree, vérification du ledger, lecture du plan, revue préalable.
+2. **Par tâche :** dispatch de l'implémenteur (`./implementer-prompt.md`) → réponds à ses questions si besoin → il implémente, teste, commit, s'auto-relit → génère le paquet de revue et dispatch du relecteur de tâche (`./task-reviewer-prompt.md`) → si spec ✅ et qualité approuvée : consigne la complétion au ledger, marque le todo. Sinon : si un finding contredit le texte du plan, demande à ton partenaire humain qui prévaut ; puis entre dans la boucle de correction (5 rounds max — R≤3 reprends l'implémenteur, R≥4 implémenteur neuf sur modèle plus capable), chaque round suivi d'une re-revue scopée (`./re-review-prompt.md`). Au round 5 non résolu, le disjoncteur saute : arbitre chaque finding ouvert ; si un finding porteur subsiste, STOP et rapporte BLOCKED ; sinon parque les findings au ledger avec leurs décisions.
+3. **À la fin :** dispatch du relecteur final (`../requesting-code-review/code-reviewer.md`) sur le modèle le plus capable. Findings finaux → UN dispatch de correction, une re-revue scopée, arbitrage des résidus. Revue finale propre → supprime le workspace de ce plan → utilise superpowers:finishing-a-development-branch.
 
 ## Setup
 
-Ensure the work happens in an isolated workspace: use
-superpowers:using-git-worktrees to create one or verify the existing one.
-Never start implementation on a main/master branch without your human
-partner's explicit consent.
+Assure-toi que le travail se déroule dans un workspace isolé : utilise superpowers:using-git-worktrees pour en créer un ou vérifier l'existant. Ne démarre jamais l'implémentation sur une branche main/master sans le consentement explicite de ton partenaire humain.
 
-Conversation memory does not survive compaction. In real sessions,
-controllers that lost their place have re-dispatched entire completed task
-sequences — the single most expensive failure observed. Track progress in
-a ledger file, not only in todos.
+La mémoire conversationnelle ne survit pas à la compaction. Dans de vraies sessions, des contrôleurs ayant perdu le fil ont re-dispatché des séquences entières de tâches déjà terminées — l'échec le plus coûteux observé. Suis la progression dans un fichier ledger, pas seulement dans les todos.
 
-- Each plan owns a workspace: at skill start, run this skill's
-  `scripts/sdd-workspace PLAN_FILE` — it prints the plan's git-ignored
-  directory (`<repo-root>/.superpowers/sdd/<plan-basename>/`), home to
-  every artifact for THIS plan: ledger, briefs, reports, review packages.
-  Another plan's directory is never yours to read or write.
-- Check for this plan's ledger at `<workspace>/progress.md`. If its first
-  line names your plan file, tasks with a `Task <N>: complete` line are DONE
-  — do not re-dispatch them; resume at the first task without one. A task
-  whose last line is a fix round is mid-loop: resume the loop at the next
-  round. A ledger whose first line names a different plan file — or a stray
-  ledger at the old flat path `.superpowers/sdd/progress.md` — is another
-  plan's progress: leave it in place and start your own, fresh.
-- Create the ledger with its identity as the first line:
-  `# SDD ledger — plan: <plan file path>`.
-- The ledger is your recovery map: the commits it names exist in git even
-  when your context no longer remembers creating them. After compaction,
-  trust the ledger and `git log` over your own recollection.
-- `git clean -fdx` will destroy the workspace (it's git-ignored scratch); if
-  that happens, recover from `git log`.
+- Chaque plan possède un workspace : au démarrage du skill, lance le `scripts/sdd-workspace PLAN_FILE` de ce skill — il imprime le répertoire git-ignoré du plan (`<repo-root>/.superpowers/sdd/<plan-basename>/`), foyer de chaque artefact de CE plan : ledger, briefs, rapports, paquets de revue. Le répertoire d'un autre plan n'est jamais à toi pour le lire ou l'écrire.
+- Vérifie le ledger de ce plan à `<workspace>/progress.md`. Si sa première ligne nomme ton fichier de plan, les tâches ayant une ligne `Task <N>: complete` sont FAITES — ne les re-dispatch pas ; reprends à la première tâche sans cette ligne. Une tâche dont la dernière ligne est un round de correction est en cours de boucle : reprends la boucle au round suivant. Un ledger dont la première ligne nomme un autre fichier de plan — ou un ledger égaré à l'ancien chemin plat `.superpowers/sdd/progress.md` — est la progression d'un autre plan : laisse-le en place et démarre le tien, neuf.
+- Crée le ledger avec son identité en première ligne : `# SDD ledger — plan: <plan file path>`.
+- Le ledger est ta carte de récupération : les commits qu'il nomme existent dans git même quand ton contexte ne se souvient plus de les avoir créés. Après une compaction, fie-toi au ledger et à `git log` plutôt qu'à ta propre mémoire.
+- `git clean -fdx` détruira le workspace (c'est du scratch git-ignoré) ; si cela arrive, récupère depuis `git log`.
 
-Read the plan once, note its context and Global Constraints, and create a
-todo per task.
+Lis le plan une fois, note son contexte et ses Global Constraints, et crée un todo par tâche.
 
-Before dispatching Task 1, scan the plan once for conflicts:
+Avant de dispatcher la Tâche 1, scanne le plan une fois pour repérer les conflits :
 
-- tasks that contradict each other or the plan's Global Constraints
-- anything the plan explicitly mandates that the review rubric treats as a
-  defect (a test that asserts nothing, verbatim duplication of a logic block)
+- des tâches qui se contredisent entre elles ou contredisent les Global Constraints du plan
+- tout ce que le plan mandate explicitement mais que le barème de revue traite comme un défaut (un test qui n'affirme rien, une duplication verbatim d'un bloc de logique)
 
-Present everything you find to your human partner as one batched question —
-each finding beside the plan text that mandates it, asking which governs —
-before execution begins, not one interrupt per discovery mid-plan. If the
-scan is clean, proceed without comment. The review loop remains the net for
-conflicts that only emerge from implementation.
+Présente tout ce que tu trouves à ton partenaire humain en une seule question groupée — chaque finding à côté du texte du plan qui le mandate, en demandant lequel prévaut — avant le début de l'exécution, pas une interruption par découverte en cours de plan. Si le scan est propre, avance sans commentaire. La boucle de revue reste le filet pour les conflits qui n'émergent que de l'implémentation.
 
-## Model Selection
+## Sélection du modèle
 
-Use the least powerful model that can handle each role to conserve cost and increase speed.
+Utilise le modèle le moins puissant capable de tenir chaque rôle, pour économiser le coût et gagner en vitesse.
 
-**Mechanical implementation tasks** (isolated functions, clear specs, 1-2 files): use a fast, cheap model. Most implementation tasks are mechanical when the plan is well-specified.
+**Tâches d'implémentation mécaniques** (fonctions isolées, specs clairs, 1-2 fichiers) : modèle rapide et bon marché. La plupart des tâches d'implémentation sont mécaniques quand le plan est bien spécifié.
 
-**Integration and judgment tasks** (multi-file coordination, pattern matching, debugging): use a standard model.
+**Tâches d'intégration et de jugement** (coordination multi-fichiers, reconnaissance de patterns, débogage) : modèle standard.
 
-**Architecture and design tasks**: use the most capable available model.
-The final whole-branch review is one of these — dispatch it on the most
-capable available model, not the session default.
+**Tâches d'architecture et de conception** : le modèle le plus capable disponible. La revue finale de toute la branche en fait partie — dispatch-la sur le modèle le plus capable disponible, pas le modèle par défaut de la session.
 
-**Review tasks**: choose the model with the same judgment, scaled to the
-diff's size, complexity, and risk. A small mechanical diff does not need the
-most capable model; a subtle concurrency change does. Scoped re-reviews of
-small fix diffs take a cheap-to-mid tier.
+**Tâches de revue** : choisis le modèle au jugement équivalent, calibré sur la taille, la complexité et le risque du diff. Un petit diff mécanique n'a pas besoin du modèle le plus capable ; un changement de concurrence subtil, si. Les re-revues scopées de petits diffs de correction prennent un tier bon marché à moyen.
 
-**Fix-loop escalation (rounds 4-5)**: use a model at least one tier above
-the implementer that got stuck.
+**Escalade de la boucle de correction (rounds 4-5)** : utilise un modèle d'au moins un tier au-dessus de l'implémenteur bloqué.
 
-**Always specify the model explicitly when dispatching a subagent.** An
-omitted model inherits your session's model — often the most capable and
-most expensive — which silently defeats this section.
+**Spécifie toujours explicitement le modèle en dispatchant un sous-agent.** Un modèle omis hérite du modèle de ta session — souvent le plus capable et le plus cher — ce qui défait silencieusement cette section.
 
-**Turn count beats token price.** Wall-clock and context cost scale with how
-many turns a subagent takes, and the cheapest models routinely take 2-3× the
-turns on multi-step work — costing more overall. Use a mid-tier model as the
-floor for reviewers and for implementers working from prose descriptions.
-When the task's plan text contains the complete code to write, the
-implementation is transcription plus testing: use the cheapest tier for
-that implementer. Single-file mechanical fixes also take the cheapest tier.
+**Le nombre de tours prime sur le prix des tokens.** Le coût en temps réel et en contexte croît avec le nombre de tours d'un sous-agent, et les modèles les moins chers prennent régulièrement 2-3× plus de tours sur du travail multi-étapes — coûtant plus au total. Utilise un modèle de tier moyen comme plancher pour les relecteurs et pour les implémenteurs travaillant à partir de descriptions en prose. Quand le texte du plan contient le code complet à écrire, l'implémentation est de la transcription plus des tests : utilise le tier le moins cher pour cet implémenteur. Les corrections mécaniques mono-fichier prennent aussi le tier le moins cher.
 
-**Task complexity signals (implementation tasks):**
-- Touches 1-2 files with a complete spec → cheap model
-- Touches multiple files with integration concerns → standard model
-- Requires design judgment or broad codebase understanding → most capable model
+**Signaux de complexité de tâche (tâches d'implémentation) :**
+- Touche 1-2 fichiers avec un spec complet → modèle bon marché
+- Touche plusieurs fichiers avec des enjeux d'intégration → modèle standard
+- Requiert du jugement de conception ou une compréhension large du codebase → modèle le plus capable
 
-## The Task Loop
+## La boucle de tâche
 
-Everything you paste into a dispatch prompt — and everything a subagent
-prints back — stays resident in your context for the rest of the session
-and is re-read on every later turn. Hand artifacts over as files.
+Tout ce que tu colles dans un prompt de dispatch — et tout ce qu'un sous-agent te renvoie — reste résident dans ton contexte pour le reste de la session et est relu à chaque tour ultérieur. Transmets les artefacts sous forme de fichiers.
 
-### 1. Dispatch the implementer
+### 1. Dispatcher l'implémenteur
 
-Record BASE (`git rev-parse HEAD`) before dispatching — the review package
-and fix-round diffs need it.
+Enregistre BASE (`git rev-parse HEAD`) avant de dispatcher — le paquet de revue et les diffs des rounds de correction en ont besoin.
 
-- **Task brief:** before dispatching an implementer, run this skill's
-  `scripts/task-brief PLAN_FILE N` — it extracts the task's full text to a
-  uniquely named file and prints the path. Compose the dispatch so the
-  brief stays the single source of
-  requirements. Your dispatch should contain: (1) one line on where this
-  task fits in the project; (2) the brief path, introduced as "read this
-  first — it is your requirements, with the exact values to use verbatim";
-  (3) interfaces and decisions from earlier tasks that the brief cannot
-  know; (4) your resolution of any ambiguity you noticed in the brief;
-  (5) the report-file path and report contract. Exact values (numbers,
-  magic strings, signatures, test cases) appear only in the brief. Never
-  make a subagent read the whole plan file.
-- **Report file:** name the implementer's report file after the brief
-  (brief `…/task-N-brief.md` → report `…/task-N-report.md`) and put it in
-  the dispatch prompt. The implementer writes the full report there and
-  returns only status, commits, a one-line test summary, and concerns.
-- A dispatch prompt describes one task, not the session's history. Do not
-  paste accumulated prior-task summaries ("state after Tasks 1-3") into
-  later dispatches — a real session's dispatch hit 42k chars of which 99%
-  was pasted history. A fresh subagent needs its task, the interfaces it
-  touches, and the global constraints. Nothing else.
-- If an earlier task parked a finding in the area this task touches, carry
-  a pointer to that ledger entry in the dispatch.
-- Record the implementer's agent identity from the dispatch result —
-  fix-loop rounds 1-3 resume this agent.
-- Never dispatch multiple implementation subagents in parallel (conflicts).
+- **Brief de tâche :** avant de dispatcher un implémenteur, lance le `scripts/task-brief PLAN_FILE N` de ce skill — il extrait le texte complet de la tâche dans un fichier nommé de façon unique et imprime le chemin. Compose le dispatch pour que le brief reste la source unique des exigences. Ton dispatch doit contenir : (1) une ligne sur la place de cette tâche dans le projet ; (2) le chemin du brief, introduit par « lis ceci d'abord — ce sont tes exigences, avec les valeurs exactes à utiliser verbatim » ; (3) les interfaces et décisions des tâches précédentes que le brief ne peut pas connaître ; (4) ta résolution de toute ambiguïté repérée dans le brief ; (5) le chemin du fichier de rapport et le contrat de rapport. Les valeurs exactes (nombres, chaînes magiques, signatures, cas de test) n'apparaissent que dans le brief. Ne fais jamais lire tout le fichier de plan à un sous-agent.
+- **Fichier de rapport :** nomme le fichier de rapport de l'implémenteur d'après le brief (brief `…/task-N-brief.md` → rapport `…/task-N-report.md`) et mets-le dans le prompt de dispatch. L'implémenteur écrit le rapport complet là-bas et ne renvoie que le statut, les commits, un résumé de test en une ligne, et les préoccupations.
+- Un prompt de dispatch décrit une tâche, pas l'historique de la session. Ne colle pas les résumés cumulés des tâches précédentes (« état après les Tâches 1-3 ») dans les dispatches ultérieurs — dans une vraie session, un dispatch a atteint 42k caractères dont 99 % d'historique collé. Un sous-agent neuf a besoin de sa tâche, des interfaces qu'il touche, et des contraintes globales. Rien d'autre.
+- Si une tâche précédente a parqué un finding dans la zone que cette tâche touche, porte un pointeur vers cette entrée du ledger dans le dispatch.
+- Enregistre l'identité de l'agent implémenteur depuis le résultat du dispatch — les rounds de correction 1-3 reprennent cet agent.
+- Ne dispatch jamais plusieurs sous-agents d'implémentation en parallèle (conflits).
 
-Template: [implementer-prompt.md](implementer-prompt.md)
+Template : [implementer-prompt.md](implementer-prompt.md)
 
-### 2. Handle the report
+### 2. Traiter le rapport
 
-Implementer subagents report one of four statuses. Handle each appropriately:
+Les sous-agents implémenteurs rapportent l'un de quatre statuts. Traite chacun comme il faut :
 
-**DONE:** Generate the review package (`scripts/review-package PLAN_FILE BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the commit you recorded before dispatching the implementer — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task), then dispatch the task reviewer with the printed path.
+**DONE :** génère le paquet de revue (`scripts/review-package PLAN_FILE BASE HEAD`, depuis le répertoire de ce skill — il imprime le chemin de fichier unique qu'il a écrit ; BASE est le commit enregistré avant de dispatcher l'implémenteur — jamais `HEAD~1`, qui laisse silencieusement tomber tous les commits d'une tâche multi-commits sauf le dernier), puis dispatch le relecteur de tâche avec le chemin imprimé.
 
-**DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review. If they're observations (e.g., "this file is getting large"), note them and proceed to review.
+**DONE_WITH_CONCERNS :** l'implémenteur a terminé le travail mais a signalé des doutes. Lis les préoccupations avant de continuer. Si elles portent sur la correction ou le périmètre, traite-les avant la revue. Si ce sont des observations (ex. « ce fichier devient volumineux »), note-les et passe à la revue.
 
-**NEEDS_CONTEXT:** The implementer needs information that wasn't provided. Provide the missing context and re-dispatch.
+**NEEDS_CONTEXT :** l'implémenteur a besoin d'informations non fournies. Fournis le contexte manquant et re-dispatch.
 
-**BLOCKED:** The implementer cannot complete the task. Assess the blocker:
-1. If it's a context problem, provide more context and re-dispatch with the same model
-2. If the task requires more reasoning, re-dispatch with a more capable model
-3. If the task is too large, break it into smaller pieces
-4. If the plan itself is wrong, escalate to the human
+**BLOCKED :** l'implémenteur ne peut pas terminer la tâche. Évalue le blocage :
+1. Si c'est un problème de contexte, fournis plus de contexte et re-dispatch avec le même modèle
+2. Si la tâche demande plus de raisonnement, re-dispatch avec un modèle plus capable
+3. Si la tâche est trop grande, découpe-la en morceaux plus petits
+4. Si le plan lui-même est faux, escalade vers l'humain
 
-**Never** ignore an escalation or force the same model to retry without changes. If the implementer said it's stuck, something needs to change.
+**Ne jamais** ignorer une escalade ni forcer le même modèle à réessayer sans changement. Si l'implémenteur dit qu'il est bloqué, quelque chose doit changer.
 
-If the implementer asks questions — before starting or mid-task — answer
-clearly and completely, provide additional context if needed, and don't
-rush it into implementation.
+Si l'implémenteur pose des questions — avant de commencer ou en cours de tâche — réponds clairement et complètement, fournis du contexte supplémentaire si besoin, et ne le précipite pas dans l'implémentation.
 
-### 3. Review the task
+### 3. Revoir la tâche
 
-Per-task reviews are task-scoped gates. The broad review happens once, at the
-final whole-branch review. Never skip the task review, and never accept a
-report missing either verdict — spec compliance AND task quality are both
-required. Implementer self-review never replaces the task review; both are
-needed.
+Les revues par tâche sont des portes (gates) au périmètre de la tâche. La revue large a lieu une fois, à la revue finale de toute la branche. Ne saute jamais la revue de tâche, et n'accepte jamais un rapport auquel il manque l'un des verdicts — la conformité au spec ET la qualité de la tâche sont toutes deux requises. L'auto-relecture de l'implémenteur ne remplace jamais la revue de tâche ; les deux sont nécessaires.
 
-- Hand the reviewer its diff as a file: run this skill's
-  `scripts/review-package PLAN_FILE BASE HEAD` and pass the reviewer the file path
-  it prints (or, without bash: `git log --oneline`, `git diff --stat`,
-  and `git diff -U10` for the range, redirected to one uniquely named
-  file). The output never enters your own context, and the reviewer sees
-  the commit list, stat summary, and full diff with context in one Read
-  call. Use the BASE you recorded before dispatching the implementer —
-  never `HEAD~1`, which silently truncates multi-commit tasks. Never
-  dispatch a task reviewer without a diff file.
-- **Reviewer inputs:** the task reviewer gets three paths — the same brief
-  file, the report file, and the review package — plus the global
-  constraints that bind the task.
-- The global-constraints block you hand the reviewer is its attention
-  lens. Copy the binding requirements verbatim from the plan's Global
-  Constraints section or the spec: exact values, exact formats, and the
-  stated relationships between components ("same layout as X", "matches
-  Y"). The reviewer's template already carries the process rules (YAGNI,
-  test hygiene, review method) — the constraints block is for what THIS
-  project's spec demands.
-- Do not add open-ended directives like "check all uses" or "run race tests
-  if useful" without a concrete, task-specific reason
-- Do not ask a reviewer to re-run tests the implementer already ran on the
-  same code — the implementer's report carries the test evidence
-- Do not pre-judge findings for the reviewer — never instruct a reviewer to
-  ignore or not flag a specific issue. If you believe a finding would be a
-  false positive, let the reviewer raise it and adjudicate it in the review
-  loop. If the prompt you are writing contains "do not flag," "don't treat X
-  as a defect," "at most Minor," or "the plan chose" — stop: you are
-  pre-judging, usually to spare yourself a review loop.
-The task reviewer may report "⚠️ Cannot verify from diff" items — requirements
-that live in unchanged code or span tasks. These do not block the rest of the
-review, but you must resolve each one yourself before marking the task
-complete: you hold the plan and cross-task context the reviewer
-lacks. If you confirm an item is a real gap, treat it as a failed spec
-review — it enters the fix loop with the other findings.
+- Remets au relecteur son diff sous forme de fichier : lance le `scripts/review-package PLAN_FILE BASE HEAD` de ce skill et passe au relecteur le chemin de fichier qu'il imprime (ou, sans bash : `git log --oneline`, `git diff --stat`, et `git diff -U10` pour la plage, redirigés vers un seul fichier nommé de façon unique). La sortie n'entre jamais dans ton propre contexte, et le relecteur voit la liste des commits, le résumé statistique et le diff complet avec contexte en un seul Read. Utilise le BASE enregistré avant de dispatcher l'implémenteur — jamais `HEAD~1`, qui tronque silencieusement les tâches multi-commits. Ne dispatch jamais un relecteur de tâche sans fichier de diff.
+- **Entrées du relecteur :** le relecteur de tâche reçoit trois chemins — le même fichier de brief, le fichier de rapport, et le paquet de revue — plus les contraintes globales qui lient la tâche.
+- Le bloc de contraintes globales que tu remets au relecteur est sa lentille d'attention. Copie les exigences contraignantes verbatim depuis la section Global Constraints du plan ou depuis le spec : valeurs exactes, formats exacts, et les relations énoncées entre composants (« même layout que X », « correspond à Y »). Le template du relecteur porte déjà les règles de processus (YAGNI, hygiène de test, méthode de revue) — le bloc de contraintes est pour ce que le spec de CE projet exige.
+- N'ajoute pas de directives ouvertes comme « vérifie tous les usages » ou « lance les tests de course si utile » sans une raison concrète et spécifique à la tâche.
+- Ne demande pas à un relecteur de relancer des tests que l'implémenteur a déjà lancés sur le même code — le rapport de l'implémenteur porte la preuve des tests.
+- Ne pré-juge pas les findings à la place du relecteur — n'instruis jamais un relecteur d'ignorer ou de ne pas signaler un problème précis. Si tu crois qu'un finding serait un faux positif, laisse le relecteur le soulever et arbitre-le dans la boucle de revue. Si le prompt que tu écris contient « ne signale pas », « ne traite pas X comme un défaut », « au plus Mineur », ou « le plan a choisi » — stop : tu pré-juges, généralement pour t'épargner une boucle de revue.
 
-Template: [task-reviewer-prompt.md](task-reviewer-prompt.md)
+Le relecteur de tâche peut rapporter des items « ⚠️ Impossible à vérifier depuis le diff » — des exigences vivant dans du code non modifié ou s'étendant sur plusieurs tâches. Ils ne bloquent pas le reste de la revue, mais tu dois résoudre chacun toi-même avant de marquer la tâche complète : c'est toi qui détiens le plan et le contexte inter-tâches qui manquent au relecteur. Si tu confirmes qu'un item est un vrai manque, traite-le comme une revue de spec échouée — il entre dans la boucle de correction avec les autres findings.
 
-### 4. The fix loop
+Template : [task-reviewer-prompt.md](task-reviewer-prompt.md)
 
-The loop triggers when the review reports spec ❌, any Critical or Important
-finding, or a ⚠️ item you confirmed as a real gap.
+### 4. La boucle de correction
 
-Before the loop starts, two routes leave it immediately:
+La boucle se déclenche quand la revue rapporte spec ❌, tout finding Critical ou Important, ou un item ⚠️ que tu as confirmé comme vrai manque.
 
-- Record Minor findings in the progress ledger as you go
-  (`Task <N>: minor (deferred): <one-liner>`), and point the final
-  whole-branch review at that list so it can triage which must be fixed
-  before merge. A roll-up nobody reads is a silent discard. Minor findings
-  never enter the loop.
-- A finding labeled plan-mandated — or any finding that conflicts with
-  what the plan's text requires — is the human's decision, like any plan
-  contradiction: present the finding and the plan text, ask which governs.
-  Do not dismiss the finding because the plan mandates it, and do not
-  dispatch a fix that contradicts the plan without asking.
-Everything else enters the loop. A fix round is one fix dispatch plus one
-scoped re-review. Five rounds maximum per task:
+Avant le début de la boucle, deux issues la quittent immédiatement :
 
-**Rounds 1-3 — resume the original implementer.** Send it the open findings
-verbatim. Its context is intact: it knows the task, the code, and its own
-choices. If your harness cannot send another message to a live subagent,
-dispatch a fresh implementer carrying the brief path, the report-file path,
-and the findings — the report file is the persistent memory either way.
+- Consigne les findings Minor dans le ledger de progression au fur et à mesure (`Task <N>: minor (deferred): <une-ligne>`), et pointe la revue finale de toute la branche vers cette liste pour qu'elle trie lesquels doivent être corrigés avant le merge. Un récapitulatif que personne ne lit est un rejet silencieux. Les findings Minor n'entrent jamais dans la boucle.
+- Un finding étiqueté plan-mandated — ou tout finding qui contredit ce que le texte du plan exige — est la décision de l'humain, comme toute contradiction de plan : présente le finding et le texte du plan, demande lequel prévaut. Ne rejette pas le finding parce que le plan le mandate, et ne dispatch pas une correction qui contredit le plan sans demander.
 
-**Rounds 4-5 — dispatch a fresh implementer on a more capable model** (per
-Model Selection), with the brief path, the report-file path, the open
-findings, and this framing: "A prior implementer attempted this task
-[N] times; you own it now. Read the report file for what was tried." A loop
-that survives three resumes usually means the implementer cannot see its
-own problem — fresh eyes and a capability bump in one move.
+Tout le reste entre dans la boucle. Un round de correction est un dispatch de correction plus une re-revue scopée. Cinq rounds maximum par tâche :
 
-**Every round, either way:** the implementer fixes, re-runs the tests
-covering the amended code, appends its fix report to the same report file,
-and returns the short contract. Before re-dispatching the reviewer, confirm
-the fix report contains the covering tests, the command run, and the
-output; dispatch the re-review once all three are present. Name the
-covering test files in the fix message — a one-line fix does not need the
-whole suite.
+**Rounds 1-3 — reprends l'implémenteur d'origine.** Envoie-lui les findings ouverts verbatim. Son contexte est intact : il connaît la tâche, le code, et ses propres choix. Si ton harness ne peut pas envoyer un autre message à un sous-agent vivant, dispatch un implémenteur neuf portant le chemin du brief, le chemin du fichier de rapport, et les findings — le fichier de rapport est la mémoire persistante dans les deux cas.
 
-**The re-review is scoped.** Run `scripts/review-package PLAN_FILE FIX_BASE HEAD`
-where FIX_BASE is the head the previous review saw, and dispatch
-[re-review-prompt.md](re-review-prompt.md) with the findings list, the
-brief, the report file, and the printed diff path. The re-reviewer verdicts
-each finding ADDRESSED or NOT ADDRESSED and flags new breakage in the fix
-diff only. New Critical/Important breakage in the fix diff joins the open
-findings list. Out-of-scope observations go to the ledger as deferred
-minors — they never extend the loop.
+**Rounds 4-5 — dispatch un implémenteur neuf sur un modèle plus capable** (selon Sélection du modèle), avec le chemin du brief, le chemin du fichier de rapport, les findings ouverts, et ce cadrage : « Un implémenteur précédent a tenté cette tâche [N] fois ; elle est à toi maintenant. Lis le fichier de rapport pour ce qui a été tenté. » Une boucle qui survit à trois reprises signifie généralement que l'implémenteur ne voit pas son propre problème — regard neuf et montée en capacité en un seul mouvement.
 
-**After each round,** append to the ledger:
+**Chaque round, dans les deux cas :** l'implémenteur corrige, relance les tests couvrant le code amendé, ajoute son rapport de correction au même fichier de rapport, et renvoie le contrat court. Avant de re-dispatcher le relecteur, confirme que le rapport de correction contient les tests couvrants, la commande lancée, et la sortie ; dispatch la re-revue une fois les trois présents. Nomme les fichiers de test couvrants dans le message de correction — une correction d'une ligne n'a pas besoin de toute la suite.
+
+**La re-revue est scopée.** Lance `scripts/review-package PLAN_FILE FIX_BASE HEAD` où FIX_BASE est le head que la revue précédente a vu, et dispatch [re-review-prompt.md](re-review-prompt.md) avec la liste des findings, le brief, le fichier de rapport, et le chemin du diff imprimé. Le re-relecteur verdicte chaque finding ADDRESSED ou NOT ADDRESSED et signale toute nouvelle casse dans le seul diff de correction. Une nouvelle casse Critical/Important dans le diff de correction rejoint la liste des findings ouverts. Les observations hors périmètre vont au ledger comme mineurs différés — elles n'étendent jamais la boucle.
+
+**Après chaque round,** ajoute au ledger :
 `Task <N>: fix round <R>/5 (<X> addressed, <Y> open — <finding one-liners>; commits <a7>..<b7>)`
 
-Never fix findings yourself in the controller session — your context stays
-clean for coordination, and controller fixes skip review.
+Ne corrige jamais les findings toi-même dans la session contrôleur — ton contexte reste propre pour la coordination, et les corrections du contrôleur sautent la revue.
 
-**The breaker.** When round 5's re-review still leaves findings open, stop
-dispatching. Adjudicate each open finding yourself — you hold the plan and
-the cross-task context the reviewer lacks:
+**Le disjoncteur.** Quand la re-revue du round 5 laisse encore des findings ouverts, arrête de dispatcher. Arbitre chaque finding ouvert toi-même — c'est toi qui détiens le plan et le contexte inter-tâches qui manquent au relecteur :
 
-- **The reviewer is wrong, or the point is contestable:** park it —
-  `Task <N>: parked — <finding> — ruling: <why the code stands>`. The final
-  review sees both sides.
-- **Real, but nothing downstream builds on it:** park it the same way, with
-  a ruling that says it's real and deferred.
-- **Real and load-bearing** — a later task builds on it, or it reveals a
-  plan defect: STOP. Append `Task <N>: BLOCKED — <reason>` and report to
-  your human partner with the finding, the plan text it collides with, and
-  the fix history. Parking a structural failure lets every dependent task
-  build on it and hands the final review a problem it cannot fix either.
+- **Le relecteur a tort, ou le point est contestable :** parque-le — `Task <N>: parked — <finding> — ruling: <pourquoi le code tient>`. La revue finale voit les deux versions.
+- **Réel, mais rien en aval ne s'appuie dessus :** parque-le de la même façon, avec une décision disant qu'il est réel et différé.
+- **Réel et porteur** — une tâche ultérieure s'appuie dessus, ou il révèle un défaut du plan : STOP. Ajoute `Task <N>: BLOCKED — <raison>` et rapporte à ton partenaire humain avec le finding, le texte du plan qu'il percute, et l'historique des corrections. Parquer un échec structurel laisse chaque tâche dépendante s'appuyer dessus et remet à la revue finale un problème qu'elle ne peut pas corriger non plus.
 
-Adjudicate only at the cap. Adjudicating earlier to end a loop is
-pre-judging with a different name. Every adjudication is a ledger entry —
-a silent discard is forbidden.
+Arbitre uniquement au plafond. Arbitrer plus tôt pour terminer une boucle, c'est pré-juger sous un autre nom. Chaque arbitrage est une entrée de ledger — un rejet silencieux est interdit.
 
-### 5. Complete the task
+### 5. Terminer la tâche
 
-When the review comes back clean — or every open finding is parked with a
-ruling at the cap — append the completion line to the ledger in the same
-message as your other bookkeeping:
+Quand la revue revient propre — ou que chaque finding ouvert est parqué avec une décision au plafond — ajoute la ligne de complétion au ledger dans le même message que tes autres écritures :
 
 - `Task <N>: complete (commits <base7>..<head7>, review clean)`
-- `Task <N>: complete (commits <base7>..<head7>, <K> parked)` after a
-  tripped breaker
+- `Task <N>: complete (commits <base7>..<head7>, <K> parked)` après un disjoncteur sauté
 
-Then mark the todo complete and move on. Never move to the next task while
-the review has open Critical/Important issues that are neither fixed nor
-parked-with-ruling at the cap.
+Puis marque le todo complet et passe à la suite. Ne passe jamais à la tâche suivante tant que la revue a des problèmes Critical/Important ouverts qui ne sont ni corrigés ni parqués-avec-décision au plafond.
 
-## Final Review
+## Revue finale
 
-The final whole-branch review gets a package too: run
-`scripts/review-package PLAN_FILE MERGE_BASE HEAD` (MERGE_BASE = the commit the
-branch started from, e.g. `git merge-base main HEAD`) and include the
-printed path in the final review dispatch, so the final reviewer reads
-one file instead of re-deriving the branch diff with git commands. Dispatch
-on the most capable available model (see Model Selection), using
-superpowers:requesting-code-review's
-[code-reviewer.md](../requesting-code-review/code-reviewer.md). Point it at
-the ledger's deferred-minor and parked lines so it can triage which must be
-fixed before merge.
+La revue finale de toute la branche reçoit aussi un paquet : lance `scripts/review-package PLAN_FILE MERGE_BASE HEAD` (MERGE_BASE = le commit d'où la branche est partie, ex. `git merge-base main HEAD`) et inclus le chemin imprimé dans le dispatch de revue finale, pour que le relecteur final lise un seul fichier au lieu de re-dériver le diff de branche avec des commandes git. Dispatch sur le modèle le plus capable disponible (voir Sélection du modèle), en utilisant [code-reviewer.md](../requesting-code-review/code-reviewer.md) de superpowers:requesting-code-review. Pointe-le vers les lignes deferred-minor et parked du ledger pour qu'il trie lesquelles doivent être corrigées avant le merge.
 
-If the final whole-branch review returns findings, dispatch ONE fix subagent
-with the complete findings list — not one fixer per finding.
-Per-finding fixers each rebuild context and re-run suites; a real
-session's final-review fix wave cost more than all its tasks combined.
-Then run exactly one scoped re-review of the fix wave
-(`scripts/review-package PLAN_FILE FIX_BASE HEAD` over the fix range,
-[re-review-prompt.md](re-review-prompt.md)).
-Adjudicate any residual findings as in the task loop's breaker: park with
-rulings, or stop on load-bearing ones. There is no second fix wave —
-residual load-bearing findings surface to your human partner when
-finishing-a-development-branch presents the options.
+Si la revue finale de toute la branche renvoie des findings, dispatch UN seul sous-agent de correction avec la liste complète des findings — pas un correcteur par finding. Les correcteurs par finding reconstruisent chacun le contexte et relancent les suites ; dans une vraie session, la vague de correction de revue finale a coûté plus que toutes ses tâches réunies. Puis lance exactement une re-revue scopée de la vague de correction (`scripts/review-package PLAN_FILE FIX_BASE HEAD` sur la plage de correction, [re-review-prompt.md](re-review-prompt.md)). Arbitre tout finding résiduel comme dans le disjoncteur de la boucle de tâche : parque avec décisions, ou arrête sur les findings porteurs. Il n'y a pas de seconde vague de correction — les findings porteurs résiduels remontent à ton partenaire humain quand finishing-a-development-branch présente les options.
 
-## Finish
+## Finir
 
-When the final whole-branch review is clean and its fixes are merged,
-delete this plan's workspace (`rm -rf <workspace>`) — the git history is
-the record now. Sibling directories belong to other plans; leave them
-alone.
+Quand la revue finale de toute la branche est propre et ses corrections mergées, supprime le workspace de ce plan (`rm -rf <workspace>`) — l'historique git est le registre désormais. Les répertoires voisins appartiennent à d'autres plans ; ne les touche pas.
 
-Use superpowers:finishing-a-development-branch.
+Utilise superpowers:finishing-a-development-branch.
 
-## Common Rationalizations
+## Rationalisations courantes
 
-| Excuse | Reality |
+| Excuse | Réalité |
 |--------|---------|
-| "Close enough on spec compliance" | Reviewer found spec gaps = not done. Fix or hit the cap and adjudicate — those are the only exits. |
-| "I'll fix it myself, dispatching is overhead" | Controller fixes pollute your context and skip review. Resume the implementer. |
-| "One more round will converge" | Past the cap, rounds don't converge — the failure is structural. Adjudicate and route. |
-| "The reviewer will just find something new anyway" | Scoped re-reviews verify fixes; they cannot wander. New findings on untouched code go to the ledger, not the loop. |
-| "This finding is obviously wrong, I'll drop it" | You adjudicate only at the cap, and every ruling is a ledger entry. Silent discards are forbidden. |
-| "The fix was small, skip the re-review" | Unreviewed fixes are how regressions land. Every round ends with a scoped re-review. |
-| "Reviews slow the loop down" | The loop without reviews is just unverified churn. Reviews are the loop's brakes and steering. |
-| "Ledger bookkeeping is overhead" | The ledger is what survives compaction. Controllers without one have re-dispatched entire completed task sequences. |
+| « Assez proche sur la conformité au spec » | Le relecteur a trouvé des manques au spec = pas terminé. Corrige ou atteins le plafond et arbitre — ce sont les seules issues. |
+| « Je vais le corriger moi-même, dispatcher c'est de la surcharge » | Les corrections du contrôleur polluent ton contexte et sautent la revue. Reprends l'implémenteur. |
+| « Un round de plus va converger » | Passé le plafond, les rounds ne convergent pas — l'échec est structurel. Arbitre et route. |
+| « Le relecteur va juste trouver autre chose de toute façon » | Les re-revues scopées vérifient les corrections ; elles ne peuvent pas divaguer. Les nouveaux findings sur du code intouché vont au ledger, pas à la boucle. |
+| « Ce finding est manifestement faux, je le laisse tomber » | Tu n'arbitres qu'au plafond, et chaque décision est une entrée de ledger. Les rejets silencieux sont interdits. |
+| « La correction était petite, saute la re-revue » | Les corrections non relues sont la façon dont les régressions atterrissent. Chaque round finit par une re-revue scopée. |
+| « Les revues ralentissent la boucle » | La boucle sans revues n'est que du brassage non vérifié. Les revues sont les freins et la direction de la boucle. |
+| « La tenue du ledger est de la surcharge » | Le ledger est ce qui survit à la compaction. Des contrôleurs sans ledger ont re-dispatché des séquences entières de tâches déjà terminées. |
 
-## Example Workflow
+## Exemple de déroulement
 
 ```
 You: I'm using Subagent-Driven Development to execute this plan.

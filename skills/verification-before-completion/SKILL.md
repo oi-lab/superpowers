@@ -1,120 +1,120 @@
 ---
 name: verification-before-completion
-description: Use when about to claim work is complete, fixed, or passing, before committing or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always
+description: À utiliser au moment de déclarer un travail terminé, corrigé ou passant, avant de committer ou créer des PR - exige de lancer les commandes de vérification et de confirmer la sortie avant toute affirmation de succès ; des preuves avant les affirmations, toujours
 ---
 
-# Verification Before Completion
+# Vérification avant de conclure
 
-## Overview
+## Vue d'ensemble
 
-**Core principle:** Evidence before claims, always.
+**Principe fondamental :** des preuves avant les affirmations, toujours.
 
-**Violating the letter of this rule is violating the spirit of this rule.**
+**Violer la lettre de cette règle, c'est violer son esprit.**
 
-## The Iron Law
-
-```
-NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE
-```
-
-If you haven't run the verification command in this message, you cannot claim it passes.
-
-## The Gate Function
+## La loi d'airain
 
 ```
-BEFORE claiming any status or expressing satisfaction:
-
-1. IDENTIFY: What command proves this claim?
-2. RUN: Execute the FULL command (fresh, complete)
-3. READ: Full output, check exit code, count failures
-4. VERIFY: Does output confirm the claim?
-   - If NO: State actual status with evidence
-   - If YES: State claim WITH evidence
-5. ONLY THEN: Make the claim
-
-Skip any step = lying, not verifying
+AUCUNE AFFIRMATION DE COMPLÉTION SANS PREUVE DE VÉRIFICATION FRAÎCHE
 ```
 
-## Common Failures
+Si tu n'as pas lancé la commande de vérification dans ce message, tu ne peux pas affirmer que ça passe.
 
-| Claim | Requires | Not Sufficient |
+## La fonction de contrôle (gate)
+
+```
+AVANT d'affirmer un statut ou d'exprimer une satisfaction :
+
+1. IDENTIFIE : quelle commande prouve cette affirmation ?
+2. LANCE : exécute la commande COMPLÈTE (fraîche, entière)
+3. LIS : la sortie complète, vérifie le code de sortie, compte les échecs
+4. VÉRIFIE : la sortie confirme-t-elle l'affirmation ?
+   - Si NON : énonce le statut réel avec preuves
+   - Si OUI : énonce l'affirmation AVEC preuves
+5. SEULEMENT ALORS : formule l'affirmation
+
+Sauter une étape = mentir, pas vérifier
+```
+
+## Échecs courants
+
+| Affirmation | Exige | Insuffisant |
 |-------|----------|----------------|
-| Tests pass | Test command output: 0 failures | Previous run, "should pass" |
-| Linter clean | Linter output: 0 errors | Partial check, extrapolation |
-| Build succeeds | Build command: exit 0 | Linter passing, logs look good |
-| Bug fixed | Test original symptom: passes | Code changed, assumed fixed |
-| Regression test works | Red-green cycle verified | Test passes once |
-| Agent completed | VCS diff shows changes | Agent reports "success" |
-| Requirements met | Line-by-line checklist | Tests passing |
+| Les tests passent | Sortie de la commande de test : 0 échec | Lancement précédent, « devrait passer » |
+| Linter propre | Sortie du linter : 0 erreur | Vérification partielle, extrapolation |
+| Le build réussit | Commande de build : exit 0 | Linter qui passe, logs qui semblent bons |
+| Bug corrigé | Test du symptôme initial : passe | Code modifié, corrigé supposé |
+| Test de régression fonctionne | Cycle rouge-vert vérifié | Le test passe une fois |
+| Agent a terminé | Le diff VCS montre les changements | L'agent rapporte « succès » |
+| Exigences satisfaites | Checklist ligne par ligne | Tests qui passent |
 
-## Red Flags - STOP
+## Signaux d'alarme — STOP
 
-- Using "should", "probably", "seems to"
-- Expressing satisfaction before verification ("Great!", "Perfect!", "Done!", etc.)
-- About to commit/push/PR without verification
-- Trusting agent success reports
-- Relying on partial verification
-- Thinking "just this once"
-- Tired and wanting work over
-- **ANY wording implying success without having run verification**
+- Utiliser « devrait », « probablement », « semble »
+- Exprimer une satisfaction avant vérification (« Super ! », « Parfait ! », « Fini ! », etc.)
+- Sur le point de committer/pusher/faire une PR sans vérification
+- Faire confiance aux rapports de succès d'un agent
+- S'appuyer sur une vérification partielle
+- Penser « juste cette fois »
+- Fatigué et vouloir en finir
+- **TOUTE formulation impliquant un succès sans avoir lancé la vérification**
 
-## Rationalization Prevention
+## Prévention des rationalisations
 
-| Excuse | Reality |
+| Excuse | Réalité |
 |--------|---------|
-| "Should work now" | RUN the verification |
-| "I'm confident" | Confidence ≠ evidence |
-| "Just this once" | No exceptions |
-| "Linter passed" | Linter ≠ compiler |
-| "Agent said success" | Verify independently |
-| "I'm tired" | Exhaustion ≠ excuse |
-| "Partial check is enough" | Partial proves nothing |
-| "Different words so rule doesn't apply" | Spirit over letter |
+| « Ça devrait marcher maintenant » | LANCE la vérification |
+| « Je suis confiant » | Confiance ≠ preuve |
+| « Juste cette fois » | Aucune exception |
+| « Le linter est passé » | Linter ≠ compilateur |
+| « L'agent a dit succès » | Vérifie indépendamment |
+| « Je suis fatigué » | Épuisement ≠ excuse |
+| « Une vérification partielle suffit » | Le partiel ne prouve rien |
+| « Mots différents donc la règle ne s'applique pas » | L'esprit prime sur la lettre |
 
-## Key Patterns
+## Motifs clés
 
-**Tests:**
+**Tests :**
 ```
-✅ [Run test command] [See: 34/34 pass] "All tests pass"
-❌ "Should pass now" / "Looks correct"
-```
-
-**Regression tests (TDD Red-Green):**
-```
-✅ Write → Run (pass) → Revert fix → Run (MUST FAIL) → Restore → Run (pass)
-❌ "I've written a regression test" (without red-green verification)
+✅ [Lance la commande de test] [Vois : 34/34 pass] « Tous les tests passent »
+❌ « Devrait passer maintenant » / « Semble correct »
 ```
 
-**Build:**
+**Tests de régression (TDD Rouge-Vert) :**
 ```
-✅ [Run build] [See: exit 0] "Build passes"
-❌ "Linter passed" (linter doesn't check compilation)
-```
-
-**Requirements:**
-```
-✅ Re-read plan → Create checklist → Verify each → Report gaps or completion
-❌ "Tests pass, phase complete"
+✅ Écris → Lance (pass) → Annule le correctif → Lance (DOIT ÉCHOUER) → Restaure → Lance (pass)
+❌ « J'ai écrit un test de régression » (sans vérification rouge-vert)
 ```
 
-**Agent delegation:**
+**Build :**
 ```
-✅ Agent reports success → Check VCS diff → Verify changes → Report actual state
-❌ Trust agent report
+✅ [Lance le build] [Vois : exit 0] « Le build passe »
+❌ « Le linter est passé » (le linter ne vérifie pas la compilation)
 ```
 
-## When To Apply
+**Exigences :**
+```
+✅ Relis le plan → Crée une checklist → Vérifie chaque point → Rapporte les manques ou la complétion
+❌ « Tests passent, phase terminée »
+```
 
-**ALWAYS before:**
-- ANY variation of success/completion claims
-- ANY expression of satisfaction
-- ANY positive statement about work state
-- Committing, PR creation, task completion
-- Moving to next task
-- Delegating to agents
+**Délégation à un agent :**
+```
+✅ L'agent rapporte succès → Vérifie le diff VCS → Vérifie les changements → Rapporte l'état réel
+❌ Faire confiance au rapport de l'agent
+```
 
-**Rule applies to:**
-- Exact phrases
-- Paraphrases and synonyms
-- Implications of success
-- ANY communication suggesting completion/correctness
+## Quand l'appliquer
+
+**TOUJOURS avant :**
+- TOUTE variante d'affirmation de succès/complétion
+- TOUTE expression de satisfaction
+- TOUTE déclaration positive sur l'état du travail
+- Commit, création de PR, complétion de tâche
+- Passer à la tâche suivante
+- Déléguer à des agents
+
+**La règle s'applique à :**
+- Les phrases exactes
+- Les paraphrases et synonymes
+- Les implications de succès
+- TOUTE communication suggérant complétion/exactitude

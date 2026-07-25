@@ -3,49 +3,49 @@ name: requesting-code-review
 description: Use when completing tasks, implementing major features, or before merging to verify work meets requirements
 ---
 
-# Requesting Code Review
+# Demander une revue de code
 
-Dispatch a code reviewer subagent to catch issues before they cascade. The reviewer gets precisely crafted context for evaluation — never your session's history.
+Dépêche un sous-agent relecteur pour repérer les problèmes avant qu'ils ne se propagent. Le relecteur reçoit un contexte précisément préparé pour l'évaluation — jamais l'historique de ta session.
 
-**Core principle:** Review early, review often.
+**Principe fondamental :** relis tôt, relis souvent.
 
-## When to Request Review
+## Quand demander une revue
 
-**Mandatory:**
-- After each task in subagent-driven development
-- After completing major feature
-- Before merge to main
+**Obligatoire :**
+- Après chaque tâche en développement piloté par sous-agents
+- Après avoir terminé une fonctionnalité majeure
+- Avant de merger sur main
 
-**Optional but valuable:**
-- When stuck (fresh perspective)
-- Before refactoring (baseline check)
-- After fixing complex bug
+**Optionnel mais utile :**
+- Quand tu es bloqué (regard neuf)
+- Avant un refactoring (état de référence)
+- Après avoir corrigé un bug complexe
 
-## How to Request
+## Comment demander
 
-**1. Get git SHAs:**
+**1. Récupère les SHA git :**
 ```bash
 BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
 HEAD_SHA=$(git rev-parse HEAD)
 ```
 
-**2. Dispatch code reviewer subagent:**
+**2. Dépêche le sous-agent relecteur :**
 
-Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md](code-reviewer.md)
+Dépêche un sous-agent `general-purpose` en remplissant le gabarit dans [code-reviewer.md](code-reviewer.md)
 
-**Placeholders:**
-- `{DESCRIPTION}` - Brief summary of what you built
-- `{PLAN_OR_REQUIREMENTS}` - What it should do
-- `{BASE_SHA}` - Starting commit
-- `{HEAD_SHA}` - Ending commit
+**Champs à remplir :**
+- `{DESCRIPTION}` - Résumé bref de ce que tu as construit
+- `{PLAN_OR_REQUIREMENTS}` - Ce que ça doit faire
+- `{BASE_SHA}` - Commit de départ
+- `{HEAD_SHA}` - Commit de fin
 
-**3. Act on feedback:**
-- Fix Critical issues immediately
-- Fix Important issues before proceeding
-- Note Minor issues for later
-- Push back if reviewer is wrong (with reasoning)
+**3. Agis sur le retour :**
+- Corrige les problèmes Critical immédiatement
+- Corrige les problèmes Important avant de continuer
+- Note les problèmes Minor pour plus tard
+- Conteste si le relecteur se trompe (avec un raisonnement)
 
-## Example
+## Exemple
 
 ```
 [Just completed Task 2: Add verification function]
@@ -72,24 +72,24 @@ You: [Fix progress indicators]
 [Continue to Task 3]
 ```
 
-## Common Rationalizations
+## Rationalisations courantes
 
-| Excuse | Reality |
+| Excuse | Réalité |
 |--------|---------|
-| "I'll just review the diff myself instead of dispatching a reviewer" | You're the coordinator — reviewing the diff inline burns the context window you need to keep driving the work. Dispatch a reviewer subagent: the diff and the evaluation live in its context, and only the findings come back to you. |
-| "The reviewer needs my whole session history to understand the change" | Hand it precisely crafted context, never your session's history. That keeps the reviewer on the work product, not your thought process. |
+| « Je vais juste relire le diff moi-même au lieu de dépêcher un relecteur » | Tu es le coordinateur — relire le diff en ligne consomme la fenêtre de contexte dont tu as besoin pour piloter le travail. Dépêche un sous-agent relecteur : le diff et l'évaluation vivent dans son contexte, et seules les conclusions te reviennent. |
+| « Le relecteur a besoin de tout l'historique de ma session pour comprendre le changement » | Donne-lui un contexte précisément préparé, jamais l'historique de ta session. Ça garde le relecteur concentré sur le produit du travail, pas sur ton cheminement de pensée. |
 
-## Red Flags
+## Signaux d'alerte
 
-**Never:**
-- Skip review because "it's simple"
-- Ignore Critical issues
-- Proceed with unfixed Important issues
-- Argue with valid technical feedback
+**Ne jamais :**
+- Sauter la revue parce que « c'est simple »
+- Ignorer les problèmes Critical
+- Continuer avec des problèmes Important non corrigés
+- Discuter un retour technique valide
 
-**If reviewer wrong:**
-- Push back with technical reasoning
-- Show code/tests that prove it works
-- Request clarification
+**Si le relecteur se trompe :**
+- Conteste avec un raisonnement technique
+- Montre le code/les tests qui prouvent que ça marche
+- Demande des précisions
 
-See template at: [code-reviewer.md](code-reviewer.md)
+Voir le gabarit dans : [code-reviewer.md](code-reviewer.md)

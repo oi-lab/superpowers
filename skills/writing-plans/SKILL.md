@@ -3,57 +3,52 @@ name: writing-plans
 description: Use when you have a spec or requirements for a multi-step task, before touching code
 ---
 
-# Writing Plans
+# Écrire des Plans
 
-## Overview
+## Vue d'ensemble
 
-Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
+Écris des plans d'implémentation complets en supposant que l'ingénieur n'a aucun contexte de notre codebase et un goût douteux. Documente tout ce qu'il doit savoir : quels fichiers toucher pour chaque tâche, le code, les tests, la doc qu'il pourrait devoir consulter, comment tester. Donne-lui tout le plan sous forme de tâches en petites bouchées. DRY. YAGNI. TDD. Commits fréquents.
 
-Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
+Suppose que c'est un développeur compétent, mais qui ne connaît presque rien à notre outillage ni à notre domaine problème. Suppose qu'il ne maîtrise pas très bien la conception de tests.
 
-**Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
+**Annonce au départ :** "I'm using the writing-plans skill to create the implementation plan."
 
-**Context:** If working in an isolated worktree, it should have been created via the `superpowers:using-git-worktrees` skill at execution time.
+**Contexte :** Si tu travailles dans un worktree isolé, il aurait dû être créé via le skill `superpowers:using-git-worktrees` au moment de l'exécution.
 
-**Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
-- (User preferences for plan location override this default)
+**Sauvegarde les plans dans :** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
+- (Les préférences de l'utilisateur sur l'emplacement du plan priment sur ce défaut)
 
-## Scope Check
+## Vérification de périmètre
 
-If the spec covers multiple independent subsystems, it should have been broken into sub-project specs during brainstorming. If it wasn't, suggest breaking this into separate plans — one per subsystem. Each plan should produce working, testable software on its own.
+Si la spec couvre plusieurs sous-systèmes indépendants, elle aurait dû être découpée en specs de sous-projets pendant le brainstorming. Si ce n'est pas le cas, suggère de découper en plans séparés — un par sous-système. Chaque plan doit produire un logiciel fonctionnel et testable à lui seul.
 
-## File Structure
+## Structure des fichiers
 
-Before defining tasks, map out which files will be created or modified and what each one is responsible for. This is where decomposition decisions get locked in.
+Avant de définir les tâches, cartographie quels fichiers seront créés ou modifiés et de quoi chacun est responsable. C'est là que les décisions de décomposition se figent.
 
-- Design units with clear boundaries and well-defined interfaces. Each file should have one clear responsibility.
-- You reason best about code you can hold in context at once, and your edits are more reliable when files are focused. Prefer smaller, focused files over large ones that do too much.
-- Files that change together should live together. Split by responsibility, not by technical layer.
-- In existing codebases, follow established patterns. If the codebase uses large files, don't unilaterally restructure - but if a file you're modifying has grown unwieldy, including a split in the plan is reasonable.
+- Conçois des unités aux frontières claires et interfaces bien définies. Chaque fichier doit avoir une seule responsabilité claire.
+- Tu raisonnes le mieux sur du code que tu peux tenir en contexte d'un coup, et tes éditions sont plus fiables quand les fichiers sont ciblés. Préfère des fichiers petits et ciblés à de gros fichiers qui en font trop.
+- Les fichiers qui changent ensemble doivent vivre ensemble. Découpe par responsabilité, pas par couche technique.
+- Dans les codebases existantes, suis les patterns établis. Si la codebase utilise de gros fichiers, ne restructure pas unilatéralement — mais si un fichier que tu modifies est devenu ingérable, inclure un découpage dans le plan est raisonnable.
 
-This structure informs the task decomposition. Each task should produce self-contained changes that make sense independently.
+Cette structure informe la décomposition en tâches. Chaque tâche doit produire des changements autonomes qui ont du sens indépendamment.
 
-## Task Right-Sizing
+## Bien dimensionner les tâches
 
-A task is the smallest unit that carries its own test cycle and is worth a
-fresh reviewer's gate. When drawing task boundaries: fold setup,
-configuration, scaffolding, and documentation steps into the task whose
-deliverable needs them; split only where a reviewer could meaningfully
-reject one task while approving its neighbor. Each task ends with an
-independently testable deliverable.
+Une tâche est la plus petite unité qui porte son propre cycle de test et qui mérite le gate d'un relecteur neuf. Pour tracer les frontières de tâche : replie l'installation, la configuration, le squelette et les étapes de documentation dans la tâche dont le livrable en a besoin ; ne découpe que là où un relecteur pourrait raisonnablement rejeter une tâche tout en approuvant sa voisine. Chaque tâche se termine par un livrable testable indépendamment.
 
-## Bite-Sized Task Granularity
+## Granularité en petites bouchées
 
-**Each step is one action (2-5 minutes):**
-- "Write the failing test" - step
-- "Run it to make sure it fails" - step
-- "Implement the minimal code to make the test pass" - step
-- "Run the tests and make sure they pass" - step
-- "Commit" - step
+**Chaque étape est une action (2-5 minutes) :**
+- « Écrire le test qui échoue » — étape
+- « L'exécuter pour vérifier qu'il échoue » — étape
+- « Implémenter le code minimal pour faire passer le test » — étape
+- « Exécuter les tests et vérifier qu'ils passent » — étape
+- « Commiter » — étape
 
-## Plan Document Header
+## En-tête du document de plan
 
-**Every plan MUST start with this header:**
+**Chaque plan DOIT commencer par cet en-tête :**
 
 ```markdown
 # [Feature Name] Implementation Plan
@@ -76,7 +71,7 @@ include this section.]
 ---
 ```
 
-## Task Structure
+## Structure d'une tâche
 
 ````markdown
 ### Task N: [Component Name]
@@ -125,31 +120,31 @@ git commit -m "feat: add specific feature"
 ```
 ````
 
-## No Placeholders
+## Pas de placeholders
 
-Every step must contain the actual content an engineer needs. These are **plan failures** — never write them:
-- "TBD", "TODO", "implement later", "fill in details"
-- "Add appropriate error handling" / "add validation" / "handle edge cases"
-- "Write tests for the above" (without actual test code)
-- "Similar to Task N" (repeat the code — the engineer may be reading tasks out of order)
-- Steps that describe what to do without showing how (code blocks required for code steps)
-- References to types, functions, or methods not defined in any task
+Chaque étape doit contenir le contenu réel dont un ingénieur a besoin. Ce sont des **échecs de plan** — ne les écris jamais :
+- « TBD », « TODO », « implement later », « fill in details »
+- « Add appropriate error handling » / « add validation » / « handle edge cases »
+- « Write tests for the above » (sans le vrai code de test)
+- « Similar to Task N » (répète le code — l'ingénieur peut lire les tâches dans le désordre)
+- Des étapes qui décrivent quoi faire sans montrer comment (blocs de code requis pour les étapes de code)
+- Des références à des types, fonctions ou méthodes non définis dans aucune tâche
 
-## Self-Review
+## Auto-revue
 
-After writing the complete plan, look at the spec with fresh eyes and check the plan against it. This is a checklist you run yourself — not a subagent dispatch.
+Après avoir écrit le plan complet, regarde la spec avec un œil neuf et confronte le plan à elle. C'est une checklist que tu exécutes toi-même — pas une délégation à un subagent.
 
-**1. Spec coverage:** Skim each section/requirement in the spec. Can you point to a task that implements it? List any gaps.
+**1. Couverture de la spec :** parcours chaque section/besoin de la spec. Peux-tu pointer une tâche qui l'implémente ? Liste les manques.
 
-**2. Placeholder scan:** Search your plan for red flags — any of the patterns from the "No Placeholders" section above. Fix them.
+**2. Chasse aux placeholders :** cherche dans ton plan les red flags — n'importe lequel des patterns de la section « Pas de placeholders » ci-dessus. Corrige-les.
 
-**3. Type consistency:** Do the types, method signatures, and property names you used in later tasks match what you defined in earlier tasks? A function called `clearLayers()` in Task 3 but `clearFullLayers()` in Task 7 is a bug.
+**3. Cohérence des types :** les types, signatures de méthodes et noms de propriétés utilisés dans les tâches ultérieures correspondent-ils à ce que tu as défini dans les tâches antérieures ? Une fonction appelée `clearLayers()` en Task 3 mais `clearFullLayers()` en Task 7 est un bug.
 
-If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
+Si tu trouves des problèmes, corrige-les en ligne. Pas besoin de re-relire — corrige et avance. Si tu trouves un besoin de la spec sans tâche, ajoute la tâche.
 
-## Execution Handoff
+## Passage à l'exécution
 
-After saving the plan, offer execution choice:
+Après avoir sauvegardé le plan, propose le choix d'exécution :
 
 **"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Two execution options:**
 
@@ -159,10 +154,10 @@ After saving the plan, offer execution choice:
 
 **Which approach?"**
 
-**If Subagent-Driven chosen:**
-- **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development
-- Fresh subagent per task + two-stage review
+**Si Subagent-Driven est choisi :**
+- **REQUIRED SUB-SKILL :** Use superpowers:subagent-driven-development
+- Un subagent neuf par tâche + revue en deux étapes
 
-**If Inline Execution chosen:**
-- **REQUIRED SUB-SKILL:** Use superpowers:executing-plans
-- Batch execution with checkpoints for review
+**Si Inline Execution est choisi :**
+- **REQUIRED SUB-SKILL :** Use superpowers:executing-plans
+- Exécution par lots avec checkpoints pour revue

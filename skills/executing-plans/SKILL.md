@@ -3,62 +3,62 @@ name: executing-plans
 description: Use when you have a written implementation plan to execute in a separate session with review checkpoints
 ---
 
-# Executing Plans
+# Exécuter des Plans
 
-## Overview
+## Vue d'ensemble
 
-Load plan, review critically, execute all tasks, report when complete.
+Charge le plan, relis-le de façon critique, exécute toutes les tâches, rends compte une fois terminé.
 
-**Announce at start:** "I'm using the executing-plans skill to implement this plan."
+**Annonce au départ :** "I'm using the executing-plans skill to implement this plan."
 
-**Note:** Superpowers works much better with access to subagents (Claude Code and Antigravity both qualify). If subagents are available, use superpowers:subagent-driven-development instead of this skill.
+**Note :** Superpowers fonctionne bien mieux avec accès aux subagents (Claude Code et Antigravity remplissent tous deux ce critère). Si des subagents sont disponibles, utilise superpowers:subagent-driven-development plutôt que ce skill.
 
-## The Process
+## Le Processus
 
-### Step 1: Load and Review Plan
-1. Ensure an isolated workspace: use superpowers:using-git-worktrees to create one or verify the existing one
-2. Read plan file
-3. Review critically - identify any questions or concerns about the plan
-4. If concerns: Raise them with your human partner before starting
-5. If no concerns: Create todos for the plan items and proceed
+### Étape 1 : Charger et relire le plan
+1. Assure un espace de travail isolé : utilise superpowers:using-git-worktrees pour en créer un ou vérifier celui existant
+2. Lis le fichier de plan
+3. Relis-le de façon critique — identifie toute question ou préoccupation sur le plan
+4. En cas de préoccupation : soulève-la avec ton partenaire humain avant de commencer
+5. Sans préoccupation : crée les todos pour les items du plan et procède
 
-### Step 2: Execute Tasks
+### Étape 2 : Exécuter les tâches
 
-For each task:
-1. Mark as in_progress
-2. Follow each step exactly (plan has bite-sized steps)
-3. Run verifications as specified
-4. Mark as completed
+Pour chaque tâche :
+1. Marque comme in_progress
+2. Suis chaque étape exactement (le plan a des étapes en petites bouchées)
+3. Exécute les vérifications comme spécifié
+4. Marque comme completed
 
-### Step 3: Complete Development
+### Étape 3 : Terminer le développement
 
-After all tasks complete and verified:
-- Announce: "I'm using the finishing-a-development-branch skill to complete this work."
-- **REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch
-- Follow that skill to verify tests, present options, execute choice
+Après que toutes les tâches sont complètes et vérifiées :
+- Annonce : "I'm using the finishing-a-development-branch skill to complete this work."
+- **REQUIRED SUB-SKILL :** Use superpowers:finishing-a-development-branch
+- Suis ce skill pour vérifier les tests, présenter les options, exécuter le choix
 
-## When to Stop and Ask for Help
+## Quand s'arrêter et demander de l'aide
 
-**STOP executing immediately when:**
-- Hit a blocker (missing dependency, test fails, instruction unclear)
-- Plan has critical gaps preventing starting
-- You don't understand an instruction
-- Verification fails repeatedly
+**ARRÊTE l'exécution immédiatement quand :**
+- Tu heurtes un blocage (dépendance manquante, test qui échoue, instruction peu claire)
+- Le plan a des lacunes critiques empêchant de démarrer
+- Tu ne comprends pas une instruction
+- Une vérification échoue de façon répétée
 
-**Ask for clarification rather than guessing.**
+**Demande une clarification plutôt que de deviner.**
 
-## When to Revisit Earlier Steps
+## Quand revisiter des étapes antérieures
 
-**Return to Review (Step 1) when:**
-- Partner updates the plan based on your feedback
-- Fundamental approach needs rethinking
+**Reviens à la Revue (Étape 1) quand :**
+- Le partenaire met à jour le plan suite à ton retour
+- L'approche fondamentale doit être repensée
 
-**Don't force through blockers** - stop and ask.
+**Ne force pas au travers des blocages** — arrête-toi et demande.
 
-## Remember
-- Review plan critically first
-- Follow plan steps exactly
-- Don't skip verifications
-- Reference skills when plan says to
-- Stop when blocked, don't guess
-- Never start implementation on main/master branch without explicit user consent
+## À retenir
+- Relis le plan de façon critique d'abord
+- Suis les étapes du plan exactement
+- Ne saute pas les vérifications
+- Réfère-toi aux skills quand le plan le dit
+- Arrête-toi quand tu es bloqué, ne devine pas
+- Ne démarre jamais l'implémentation sur la branche main/master sans le consentement explicite de l'utilisateur

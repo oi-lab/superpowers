@@ -1,71 +1,55 @@
 ---
 name: dispatching-parallel-agents
-description: Use ONLY when your human partner explicitly asks for parallel agents, or for a genuinely large batch of independent failures - fanning out subagents duplicates context and is token-intensive (opt-in). For a handful of tasks, handle them yourself.
+description: À utiliser UNIQUEMENT quand ton partenaire humain demande explicitement des agents parallèles, ou pour un lot vraiment important d'échecs indépendants - déployer des sous-agents en éventail duplique le contexte et est gourmand en tokens (opt-in). Pour une poignée de tâches, gère-les toi-même.
 ---
 
-# Dispatching Parallel Agents
+# Déployer des agents en parallèle
 
-## Overview
+## Vue d'ensemble
 
-You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what they need. This also preserves your own context for coordination work.
+Tu délègues des tâches à des agents spécialisés au contexte isolé. En façonnant précisément leurs instructions et leur contexte, tu t'assures qu'ils restent concentrés et réussissent leur tâche. Ils ne doivent jamais hériter du contexte ou de l'historique de ta session — tu construis exactement ce dont ils ont besoin. Cela préserve aussi ton propre contexte pour le travail de coordination.
 
-When you have multiple unrelated failures (different test files, different subsystems, different bugs), investigating them sequentially wastes time. Each investigation is independent and can happen in parallel.
+Quand tu as plusieurs échecs sans rapport entre eux (fichiers de test différents, sous-systèmes différents, bugs différents), les investiguer séquentiellement fait perdre du temps. Chaque investigation est indépendante et peut se dérouler en parallèle.
 
-**Core principle:** Dispatch one agent per independent problem domain. Let them work concurrently.
+**Principe central :** déploie un agent par domaine de problème indépendant. Laisse-les travailler simultanément.
 
-## When to Use
+## Quand l'utiliser
 
-```dot
-digraph when_to_use {
-    "Multiple failures?" [shape=diamond];
-    "Are they independent?" [shape=diamond];
-    "Single agent investigates all" [shape=box];
-    "One agent per problem domain" [shape=box];
-    "Can they work in parallel?" [shape=diamond];
-    "Sequential agents" [shape=box];
-    "Parallel dispatch" [shape=box];
+Décision : plusieurs échecs indépendants → un agent par domaine de problème ; échecs liés → un seul agent investigue tout. Si les agents peuvent travailler sans état partagé → dispatch parallèle ; sinon → agents séquentiels.
 
-    "Multiple failures?" -> "Are they independent?" [label="yes"];
-    "Are they independent?" -> "Single agent investigates all" [label="no - related"];
-    "Are they independent?" -> "Can they work in parallel?" [label="yes"];
-    "Can they work in parallel?" -> "Parallel dispatch" [label="yes"];
-    "Can they work in parallel?" -> "Sequential agents" [label="no - shared state"];
-}
-```
+**Utilise quand :**
+- 3+ fichiers de test échouent avec des causes racines différentes
+- Plusieurs sous-systèmes cassés indépendamment
+- Chaque problème peut se comprendre sans le contexte des autres
+- Aucun état partagé entre les investigations
 
-**Use when:**
-- 3+ test files failing with different root causes
-- Multiple subsystems broken independently
-- Each problem can be understood without context from others
-- No shared state between investigations
+**N'utilise pas quand :**
+- Les échecs sont liés (corriger l'un peut corriger les autres)
+- Besoin de comprendre l'état complet du système
+- Les agents interféreraient entre eux
 
-**Don't use when:**
-- Failures are related (fix one might fix others)
-- Need to understand full system state
-- Agents would interfere with each other
+## Le pattern
 
-## The Pattern
+### 1. Identifier les domaines indépendants
 
-### 1. Identify Independent Domains
+Groupe les échecs selon ce qui est cassé :
+- Tests du fichier A : flux d'approbation d'outils
+- Tests du fichier B : comportement de complétion par lots
+- Tests du fichier C : fonctionnalité d'abandon
 
-Group failures by what's broken:
-- File A tests: Tool approval flow
-- File B tests: Batch completion behavior
-- File C tests: Abort functionality
+Chaque domaine est indépendant - corriger l'approbation d'outils n'affecte pas les tests d'abandon.
 
-Each domain is independent - fixing tool approval doesn't affect abort tests.
+### 2. Créer des tâches d'agent ciblées
 
-### 2. Create Focused Agent Tasks
+Chaque agent reçoit :
+- **Périmètre précis :** un fichier de test ou un sous-système
+- **Objectif clair :** faire passer ces tests
+- **Contraintes :** ne pas modifier d'autre code
+- **Sortie attendue :** résumé de ce que tu as trouvé et corrigé
 
-Each agent gets:
-- **Specific scope:** One test file or subsystem
-- **Clear goal:** Make these tests pass
-- **Constraints:** Don't change other code
-- **Expected output:** Summary of what you found and fixed
+### 3. Déployer en parallèle
 
-### 3. Dispatch in Parallel
-
-Issue all three subagent dispatches in the same response — they run in parallel:
+Émets les trois dispatches de sous-agents dans la même réponse — ils s'exécutent en parallèle :
 
 ```text
 Subagent (general-purpose): "Fix agent-tool-abort.test.ts failures"
@@ -74,22 +58,22 @@ Subagent (general-purpose): "Fix tool-approval-race-conditions.test.ts failures"
 # All three run concurrently.
 ```
 
-Multiple dispatch calls in one response = parallel execution. One per response = sequential.
+Plusieurs appels de dispatch dans une réponse = exécution parallèle. Un par réponse = séquentiel.
 
-### 4. Review and Integrate
+### 4. Revoir et intégrer
 
-When agents return:
-- Read each summary
-- Verify fixes don't conflict
-- Run full test suite
-- Integrate all changes
+Quand les agents reviennent :
+- Lis chaque résumé
+- Vérifie que les corrections n'entrent pas en conflit
+- Lance la suite de tests complète
+- Intègre tous les changements
 
-## Agent Prompt Structure
+## Structure du prompt d'agent
 
-Good agent prompts are:
-1. **Focused** - One clear problem domain
-2. **Self-contained** - All context needed to understand the problem
-3. **Specific about output** - What should the agent return?
+Un bon prompt d'agent est :
+1. **Ciblé** - Un seul domaine de problème clair
+2. **Autonome** - Tout le contexte nécessaire pour comprendre le problème
+3. **Précis sur la sortie** - Que doit retourner l'agent ?
 
 ```markdown
 Fix the 3 failing tests in src/agents/agent-tool-abort.test.ts:
@@ -112,56 +96,56 @@ Do NOT just increase timeouts - find the real issue.
 Return: Summary of what you found and what you fixed.
 ```
 
-## Common Mistakes
+## Erreurs courantes
 
-**❌ Too broad:** "Fix all the tests" - agent gets lost
-**✅ Specific:** "Fix agent-tool-abort.test.ts" - focused scope
+**❌ Trop large :** « Fix all the tests » - l'agent se perd
+**✅ Précis :** « Fix agent-tool-abort.test.ts » - périmètre ciblé
 
-**❌ No context:** "Fix the race condition" - agent doesn't know where
-**✅ Context:** Paste the error messages and test names
+**❌ Sans contexte :** « Fix the race condition » - l'agent ne sait pas où
+**✅ Avec contexte :** colle les messages d'erreur et les noms de test
 
-**❌ No constraints:** Agent might refactor everything
-**✅ Constraints:** "Do NOT change production code" or "Fix tests only"
+**❌ Sans contraintes :** l'agent pourrait tout refactoriser
+**✅ Avec contraintes :** « Do NOT change production code » ou « Fix tests only »
 
-**❌ Vague output:** "Fix it" - you don't know what changed
-**✅ Specific:** "Return summary of root cause and changes"
+**❌ Sortie vague :** « Fix it » - tu ne sais pas ce qui a changé
+**✅ Précise :** « Return summary of root cause and changes »
 
-## When NOT to Use
+## Quand NE PAS l'utiliser
 
-**Related failures:** Fixing one might fix others - investigate together first
-**Need full context:** Understanding requires seeing entire system
-**Exploratory debugging:** You don't know what's broken yet
-**Shared state:** Agents would interfere (editing same files, using same resources)
+**Échecs liés :** corriger l'un peut corriger les autres - investigue-les ensemble d'abord
+**Besoin du contexte complet :** comprendre exige de voir tout le système
+**Débogage exploratoire :** tu ne sais pas encore ce qui est cassé
+**État partagé :** les agents interféreraient (éditer les mêmes fichiers, utiliser les mêmes ressources)
 
-## Real Example from Session
+## Exemple réel de session
 
-**Scenario:** 6 test failures across 3 files after major refactoring
+**Scénario :** 6 échecs de test sur 3 fichiers après une refactorisation majeure
 
-**Failures:**
-- agent-tool-abort.test.ts: 3 failures (timing issues)
-- batch-completion-behavior.test.ts: 2 failures (tools not executing)
-- tool-approval-race-conditions.test.ts: 1 failure (execution count = 0)
+**Échecs :**
+- agent-tool-abort.test.ts : 3 échecs (problèmes de timing)
+- batch-completion-behavior.test.ts : 2 échecs (outils non exécutés)
+- tool-approval-race-conditions.test.ts : 1 échec (nombre d'exécutions = 0)
 
-**Decision:** Independent domains - abort logic separate from batch completion separate from race conditions
+**Décision :** domaines indépendants - logique d'abandon séparée de la complétion par lots séparée des conditions de course
 
-**Dispatch:**
+**Dispatch :**
 ```
 Agent 1 → Fix agent-tool-abort.test.ts
 Agent 2 → Fix batch-completion-behavior.test.ts
 Agent 3 → Fix tool-approval-race-conditions.test.ts
 ```
 
-**Results:**
-- Agent 1: Replaced timeouts with event-based waiting
-- Agent 2: Fixed event structure bug (threadId in wrong place)
-- Agent 3: Added wait for async tool execution to complete
+**Résultats :**
+- Agent 1 : a remplacé les timeouts par une attente basée sur les événements
+- Agent 2 : a corrigé un bug de structure d'événement (threadId au mauvais endroit)
+- Agent 3 : a ajouté une attente de la fin d'exécution asynchrone de l'outil
 
-**Integration:** All fixes independent, no conflicts, full suite green
+**Intégration :** toutes les corrections indépendantes, aucun conflit, suite complète verte
 
-## Verification
+## Vérification
 
-After agents return:
-1. **Review each summary** - Understand what changed
-2. **Check for conflicts** - Did agents edit same code?
-3. **Run full suite** - Verify all fixes work together
-4. **Spot check** - Agents can make systematic errors
+Après le retour des agents :
+1. **Revoir chaque résumé** - Comprends ce qui a changé
+2. **Vérifier les conflits** - Les agents ont-ils édité le même code ?
+3. **Lancer la suite complète** - Vérifie que toutes les corrections fonctionnent ensemble
+4. **Contrôle par sondage** - Les agents peuvent commettre des erreurs systématiques

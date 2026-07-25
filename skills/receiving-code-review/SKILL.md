@@ -3,15 +3,15 @@ name: receiving-code-review
 description: Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable - requires technical rigor and verification, not performative agreement or blind implementation
 ---
 
-# Code Review Reception
+# Recevoir une revue de code
 
-## Overview
+## Vue d'ensemble
 
-Code review requires technical evaluation, not emotional performance.
+Une revue de code appelle une évaluation technique, pas une performance émotionnelle.
 
-**Core principle:** Verify before implementing. Ask before assuming. Technical correctness over social comfort.
+**Principe fondamental :** vérifier avant d'implémenter. Demander avant de supposer. La justesse technique passe avant le confort social.
 
-## The Response Pattern
+## Le schéma de réponse
 
 ```
 WHEN receiving code review feedback:
@@ -24,20 +24,20 @@ WHEN receiving code review feedback:
 6. IMPLEMENT: One item at a time, test each
 ```
 
-## Forbidden Responses
+## Réponses interdites
 
-**NEVER:**
-- "You're absolutely right!" (explicit instruction-file violation)
-- "Great point!" / "Excellent feedback!" (performative)
-- "Let me implement that now" (before verification)
+**JAMAIS :**
+- « Tu as tout à fait raison ! » (violation explicite d'un fichier d'instructions)
+- « Excellente remarque ! » / « Super retour ! » (performatif)
+- « Je l'implémente tout de suite » (avant vérification)
 
-**INSTEAD:**
-- Restate the technical requirement
-- Ask clarifying questions
-- Push back with technical reasoning if wrong
-- Just start working (actions > words)
+**À LA PLACE :**
+- Reformule l'exigence technique
+- Pose des questions de clarification
+- Conteste avec un raisonnement technique si c'est faux
+- Mets-toi simplement au travail (les actes valent mieux que les mots)
 
-## Handling Unclear Feedback
+## Gérer un retour peu clair
 
 ```
 IF any item is unclear:
@@ -47,24 +47,24 @@ IF any item is unclear:
 WHY: Items may be related. Partial understanding = wrong implementation.
 ```
 
-**Example:**
+**Exemple :**
 ```
-your human partner: "Fix 1-6"
+ton partenaire humain : "Fix 1-6"
 You understand 1,2,3,6. Unclear on 4,5.
 
 ❌ WRONG: Implement 1,2,3,6 now, ask about 4,5 later
 ✅ RIGHT: "I understand items 1,2,3,6. Need clarification on 4 and 5 before proceeding."
 ```
 
-## Source-Specific Handling
+## Traitement selon la source
 
-### From your human partner
-- **Trusted** - implement after understanding
-- **Still ask** if scope unclear
-- **No performative agreement**
-- **Skip to action** or technical acknowledgment
+### De ton partenaire humain
+- **De confiance** — implémente après avoir compris
+- **Demande quand même** si le périmètre est flou
+- **Pas d'accord performatif**
+- **Passe à l'action** ou à un accusé de réception technique
 
-### From External Reviewers
+### De relecteurs externes
 ```
 BEFORE implementing:
   1. Check: Technically correct for THIS codebase?
@@ -83,9 +83,9 @@ IF conflicts with your human partner's prior decisions:
   Stop and discuss with your human partner first
 ```
 
-**your human partner's rule:** "External feedback - be skeptical, but check carefully"
+**Règle de ton partenaire humain :** « Retour externe — sois sceptique, mais vérifie soigneusement »
 
-## YAGNI Check for "Professional" Features
+## Contrôle YAGNI pour les fonctionnalités « professionnelles »
 
 ```
 IF reviewer suggests "implementing properly":
@@ -95,9 +95,9 @@ IF reviewer suggests "implementing properly":
   IF used: Then implement properly
 ```
 
-**your human partner's rule:** "You and reviewer both report to me. If we don't need this feature, don't add it."
+**Règle de ton partenaire humain :** « Le relecteur et toi me rendez compte tous les deux. Si on n'a pas besoin de cette fonctionnalité, ne l'ajoute pas. »
 
-## Implementation Order
+## Ordre d'implémentation
 
 ```
 FOR multi-item feedback:
@@ -110,27 +110,27 @@ FOR multi-item feedback:
   4. Verify no regressions
 ```
 
-## When To Push Back
+## Quand contester
 
-Push back when:
-- Suggestion breaks existing functionality
-- Reviewer lacks full context
-- Violates YAGNI (unused feature)
-- Technically incorrect for this stack
-- Legacy/compatibility reasons exist
-- Conflicts with your human partner's architectural decisions
+Conteste quand :
+- La suggestion casse une fonctionnalité existante
+- Le relecteur n'a pas tout le contexte
+- Ça viole YAGNI (fonctionnalité inutilisée)
+- C'est techniquement incorrect pour cette stack
+- Il existe des raisons de legacy/compatibilité
+- Ça entre en conflit avec les décisions d'architecture de ton partenaire humain
 
-**How to push back:**
-- Use technical reasoning, not defensiveness
-- Ask specific questions
-- Reference working tests/code
-- Involve your human partner if architectural
+**Comment contester :**
+- Utilise un raisonnement technique, pas de la défensive
+- Pose des questions précises
+- Réfère-toi à des tests/du code qui marchent
+- Implique ton partenaire humain si c'est architectural
 
-**If you're uncomfortable pushing back out loud:** Name that tension, then tell your partner about the issue you've seen. They'll appreciate your honesty.
+**Si tu es mal à l'aise de contester à voix haute :** nomme cette tension, puis signale à ton partenaire le problème que tu as vu. Il appréciera ton honnêteté.
 
-## Acknowledging Correct Feedback
+## Accuser réception d'un retour correct
 
-When feedback IS correct:
+Quand le retour EST correct :
 ```
 ✅ "Fixed. [Brief description of what changed]"
 ✅ "Good catch - [specific issue]. Fixed in [location]."
@@ -143,13 +143,13 @@ When feedback IS correct:
 ❌ ANY gratitude expression
 ```
 
-**Why no thanks:** Actions speak. Just fix it. The code itself shows you heard the feedback.
+**Pourquoi pas de remerciements :** les actes parlent. Corrige, c'est tout. Le code lui-même montre que tu as entendu le retour.
 
-**If you catch yourself about to write "Thanks":** DELETE IT. State the fix instead.
+**Si tu te surprends à écrire « Merci » :** SUPPRIME-LE. Énonce la correction à la place.
 
-## Gracefully Correcting Your Pushback
+## Corriger élégamment ta contestation
 
-If you pushed back and were wrong:
+Si tu as contesté à tort :
 ```
 ✅ "You were right - I checked [X] and it does [Y]. Implementing now."
 ✅ "Verified this and you're correct. My initial understanding was wrong because [reason]. Fixing."
@@ -159,47 +159,47 @@ If you pushed back and were wrong:
 ❌ Over-explaining
 ```
 
-State the correction factually and move on.
+Énonce la correction factuellement et passe à la suite.
 
-## Common Mistakes
+## Erreurs courantes
 
-| Mistake | Fix |
+| Erreur | Correction |
 |---------|-----|
-| Performative agreement | State requirement or just act |
-| Blind implementation | Verify against codebase first |
-| Batch without testing | One at a time, test each |
-| Assuming reviewer is right | Check if breaks things |
-| Avoiding pushback | Technical correctness > comfort |
-| Partial implementation | Clarify all items first |
-| Can't verify, proceed anyway | State limitation, ask for direction |
+| Accord performatif | Énonce l'exigence ou agis simplement |
+| Implémentation aveugle | Vérifie d'abord contre la base de code |
+| Traiter en lot sans tester | Un à la fois, teste chacun |
+| Supposer que le relecteur a raison | Vérifie si ça casse des choses |
+| Éviter de contester | Justesse technique > confort |
+| Implémentation partielle | Clarifie tous les points d'abord |
+| Impossible à vérifier, on continue quand même | Énonce la limite, demande une direction |
 
-## Real Examples
+## Exemples réels
 
-**Performative Agreement (Bad):**
+**Accord performatif (mauvais) :**
 ```
 Reviewer: "Remove legacy code"
 ❌ "You're absolutely right! Let me remove that..."
 ```
 
-**Technical Verification (Good):**
+**Vérification technique (bon) :**
 ```
 Reviewer: "Remove legacy code"
 ✅ "Checking... build target is 10.15+, this API needs 13+. Need legacy for backward compat. Current impl has wrong bundle ID - fix it or drop pre-13 support?"
 ```
 
-**YAGNI (Good):**
+**YAGNI (bon) :**
 ```
 Reviewer: "Implement proper metrics tracking with database, date filters, CSV export"
 ✅ "Grepped codebase - nothing calls this endpoint. Remove it (YAGNI)? Or is there usage I'm missing?"
 ```
 
-**Unclear Item (Good):**
+**Point peu clair (bon) :**
 ```
-your human partner: "Fix items 1-6"
+ton partenaire humain : "Fix items 1-6"
 You understand 1,2,3,6. Unclear on 4,5.
 ✅ "Understand 1,2,3,6. Need clarification on 4 and 5 before implementing."
 ```
 
-## GitHub Thread Replies
+## Réponses aux fils de discussion GitHub
 
-When replying to inline review comments on GitHub, reply in the comment thread (`gh api repos/{owner}/{repo}/pulls/{pr}/comments/{id}/replies`), not as a top-level PR comment.
+Pour répondre à des commentaires de revue en ligne sur GitHub, réponds dans le fil du commentaire (`gh api repos/{owner}/{repo}/pulls/{pr}/comments/{id}/replies`), pas en commentaire de PR de premier niveau.

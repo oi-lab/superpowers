@@ -1,76 +1,56 @@
 ---
 name: test-driven-development
-description: Use when implementing any feature or bugfix, before writing implementation code
+description: À utiliser pour implémenter toute fonctionnalité ou correction de bug, avant d'écrire le code d'implémentation
 ---
 
-# Test-Driven Development (TDD)
+# Développement piloté par les tests (TDD)
 
-## Overview
+## Vue d'ensemble
 
-Write the test first. Watch it fail. Write minimal code to pass.
+Écris le test d'abord. Regarde-le échouer. Écris le code minimal pour le faire passer.
 
-**Core principle:** If you didn't watch the test fail, you don't know if it tests the right thing.
+**Principe central :** si tu n'as pas vu le test échouer, tu ne sais pas s'il teste la bonne chose.
 
-**Violating the letter of the rules is violating the spirit of the rules.**
+**Violer la lettre des règles, c'est violer leur esprit.**
 
-## When to Use
+## Quand l'utiliser
 
-**Always:**
-- New features
-- Bug fixes
-- Refactoring
-- Behavior changes
+**Toujours :**
+- Nouvelles fonctionnalités
+- Corrections de bugs
+- Refactorisation
+- Changements de comportement
 
-**Exceptions (ask your human partner):**
-- Throwaway prototypes
-- Generated code
-- Configuration files
+**Exceptions (demande à ton partenaire humain) :**
+- Prototypes jetables
+- Code généré
+- Fichiers de configuration
 
-Thinking "skip TDD just this once"? Stop. That's rationalization.
+Tu penses « je saute le TDD juste cette fois » ? Stop. C'est une rationalisation.
 
-## The Iron Law
+## La loi d'airain
 
 ```
-NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST
+AUCUN CODE DE PRODUCTION SANS UN TEST QUI ÉCHOUE D'ABORD
 ```
 
-Write code before the test? Delete it. Start over.
+Tu as écrit du code avant le test ? Supprime-le. Recommence.
 
-**No exceptions:**
-- Don't keep it as "reference"
-- Don't "adapt" it while writing tests
-- Don't look at it
-- Delete means delete
+**Aucune exception :**
+- Ne le garde pas comme « référence »
+- Ne l'« adapte » pas en écrivant les tests
+- Ne le regarde pas
+- Supprimer veut dire supprimer
 
-Implement fresh from tests. Period.
+Réimplémente à neuf à partir des tests. Point.
 
-## Red-Green-Refactor
+## Rouge-Vert-Refactor
 
-```dot
-digraph tdd_cycle {
-    rankdir=LR;
-    red [label="RED\nWrite failing test", shape=box, style=filled, fillcolor="#ffcccc"];
-    verify_red [label="Verify fails\ncorrectly", shape=diamond];
-    green [label="GREEN\nMinimal code", shape=box, style=filled, fillcolor="#ccffcc"];
-    verify_green [label="Verify passes\nAll green", shape=diamond];
-    refactor [label="REFACTOR\nClean up", shape=box, style=filled, fillcolor="#ccccff"];
-    next [label="Next", shape=ellipse];
+Cycle : RED (écrire un test qui échoue) → vérifier qu'il échoue correctement → GREEN (code minimal) → vérifier qu'il passe et que tout est vert → REFACTOR (nettoyer en restant vert) → tâche suivante. Si le test échoue pour une mauvaise raison, retourne à RED ; si le code ne passe pas, reste en GREEN.
 
-    red -> verify_red;
-    verify_red -> green [label="yes"];
-    verify_red -> red [label="wrong\nfailure"];
-    green -> verify_green;
-    verify_green -> refactor [label="yes"];
-    verify_green -> green [label="no"];
-    refactor -> verify_green [label="stay\ngreen"];
-    verify_green -> next;
-    next -> red;
-}
-```
+### RED - Écrire un test qui échoue
 
-### RED - Write Failing Test
-
-Write one minimal test showing what should happen.
+Écris un test minimal montrant ce qui devrait se passer.
 
 <Good>
 ```typescript
@@ -88,7 +68,7 @@ test('retries failed operations 3 times', async () => {
   expect(attempts).toBe(3);
 });
 ```
-Clear name, tests real behavior, one thing
+Nom clair, teste un comportement réel, une seule chose
 </Good>
 
 <Bad>
@@ -102,34 +82,34 @@ test('retry works', async () => {
   expect(mock).toHaveBeenCalledTimes(3);
 });
 ```
-Vague name, tests mock not code
+Nom vague, teste le mock et non le code
 </Bad>
 
-**Requirements:**
-- One behavior
-- Clear name
-- Real code (no mocks unless unavoidable)
+**Exigences :**
+- Un comportement
+- Nom clair
+- Code réel (pas de mocks sauf inévitable)
 
-### Verify RED - Watch It Fail
+### Vérifier RED - Regarde-le échouer
 
-**MANDATORY. Never skip.**
+**OBLIGATOIRE. Ne saute jamais cette étape.**
 
 ```bash
 npm test path/to/test.test.ts
 ```
 
-Confirm:
-- Test fails (not errors)
-- Failure message is expected
-- Fails because feature missing (not typos)
+Confirme :
+- Le test échoue (n'erre pas)
+- Le message d'échec est celui attendu
+- Il échoue parce que la fonctionnalité manque (pas à cause d'une faute de frappe)
 
-**Test passes?** You're testing existing behavior. Fix test.
+**Le test passe ?** Tu testes un comportement existant. Corrige le test.
 
-**Test errors?** Fix error, re-run until it fails correctly.
+**Le test erre ?** Corrige l'erreur, relance jusqu'à ce qu'il échoue correctement.
 
-### GREEN - Minimal Code
+### GREEN - Code minimal
 
-Write simplest code to pass the test.
+Écris le code le plus simple qui fait passer le test.
 
 <Good>
 ```typescript
@@ -144,7 +124,7 @@ async function retryOperation<T>(fn: () => Promise<T>): Promise<T> {
   throw new Error('unreachable');
 }
 ```
-Just enough to pass
+Juste assez pour passer
 </Good>
 
 <Bad>
@@ -160,92 +140,92 @@ async function retryOperation<T>(
   // YAGNI
 }
 ```
-Over-engineered
+Sur-conçu
 </Bad>
 
-Don't add features, refactor other code, or "improve" beyond the test.
+N'ajoute pas de fonctionnalités, ne refactorise pas d'autre code, n'« améliore » rien au-delà du test.
 
-### Verify GREEN - Watch It Pass
+### Vérifier GREEN - Regarde-le passer
 
-**MANDATORY.**
+**OBLIGATOIRE.**
 
 ```bash
 npm test path/to/test.test.ts
 ```
 
-Confirm:
-- Test passes
-- Other tests still pass
-- Output pristine (no errors, warnings)
+Confirme :
+- Le test passe
+- Les autres tests passent toujours
+- Sortie impeccable (aucune erreur, aucun avertissement)
 
-**Test fails?** Fix code, not test.
+**Le test échoue ?** Corrige le code, pas le test.
 
-**Other tests fail?** Fix now.
+**D'autres tests échouent ?** Corrige maintenant.
 
-### REFACTOR - Clean Up
+### REFACTOR - Nettoyer
 
-After green only:
-- Remove duplication
-- Improve names
-- Extract helpers
+Uniquement après le vert :
+- Supprimer la duplication
+- Améliorer les noms
+- Extraire des helpers
 
-Keep tests green. Don't add behavior.
+Garde les tests verts. N'ajoute pas de comportement.
 
-### Repeat
+### Répéter
 
-Next failing test for next feature.
+Prochain test qui échoue pour la prochaine fonctionnalité.
 
-## Good Tests
+## Bons tests
 
-| Quality | Good | Bad |
+| Qualité | Bon | Mauvais |
 |---------|------|-----|
-| **Minimal** | One thing. "and" in name? Split it. | `test('validates email and domain and whitespace')` |
-| **Clear** | Name describes behavior | `test('test1')` |
-| **Shows intent** | Demonstrates desired API | Obscures what code should do |
+| **Minimal** | Une seule chose. Un « et » dans le nom ? Sépare-le. | `test('validates email and domain and whitespace')` |
+| **Clair** | Le nom décrit le comportement | `test('test1')` |
+| **Montre l'intention** | Démontre l'API souhaitée | Masque ce que le code devrait faire |
 
-When writing or changing any test, read [writing-good-tests.md](writing-good-tests.md) for the rules that keep tests honest:
-- Name the production change that would make the test fail — before writing it
-- Assert on real behavior, never on mock behavior
-- Keep test-only code in test utilities, out of production classes
-- Understand a dependency's side effects before mocking it
+Quand tu écris ou modifies un test, lis [writing-good-tests.md](writing-good-tests.md) pour les règles qui gardent les tests honnêtes :
+- Nomme le changement de production qui ferait échouer le test — avant de l'écrire
+- Assertion sur un comportement réel, jamais sur le comportement d'un mock
+- Garde le code réservé aux tests dans les utilitaires de test, hors des classes de production
+- Comprends les effets de bord d'une dépendance avant de la mocker
 
-## Common Rationalizations
+## Rationalisations courantes
 
-| Excuse | Reality |
+| Excuse | Réalité |
 |--------|---------|
-| "Too simple to test" | Simple code breaks. Test takes 30 seconds. |
-| "I'll test after" | Tests written after pass immediately — which proves nothing. They may test the wrong thing, test the implementation instead of the behavior, or miss the edge case you forgot. You never watched it fail, so you never proved it can catch the bug. Test-first forces that failure. |
-| "Tests after achieve same goals (spirit not ritual)" | Tests-after answer "what does this do?"; tests-first answer "what should this do?" Tests written after are biased by the code you already wrote — you verify the cases you remembered, not the ones you'd have discovered. Coverage without proof the tests work. |
-| "Already manually tested" | Manual testing is ad-hoc: no record of what you covered, no way to re-run it when the code changes, easy to forget cases under pressure. "Worked when I tried it" ≠ comprehensive. Automated tests run the same way every time. |
-| "Deleting X hours is wasteful" | Sunk cost fallacy — that time is already spent either way. The real choice: rewrite with TDD (high confidence) vs. keep it and bolt tests on after (low confidence, likely bugs). Keeping code you can't trust is the waste. |
-| "Keep as reference, write tests first" | You'll adapt it. That's testing after. Delete means delete. |
-| "Need to explore first" | Fine. Throw away exploration, start with TDD. |
-| "Test hard = design unclear" | Listen to test. Hard to test = hard to use. |
-| "TDD will slow me down" | TDD IS the pragmatic path: catches bugs before commit, prevents regressions, lets you refactor without fear. "Pragmatic" shortcuts mean debugging in production — slower, not faster. |
-| "Manual test faster" | Manual doesn't prove edge cases. You'll re-test every change. |
-| "Existing code has no tests" | You're improving it. Add tests for existing code. |
+| « Trop simple à tester » | Le code simple casse. Le test prend 30 secondes. |
+| « Je testerai après » | Les tests écrits après passent immédiatement — ce qui ne prouve rien. Ils peuvent tester la mauvaise chose, tester l'implémentation au lieu du comportement, ou rater le cas limite que tu as oublié. Tu ne l'as jamais vu échouer, donc tu n'as jamais prouvé qu'il peut attraper le bug. Écrire le test d'abord force cet échec. |
+| « Tester après atteint les mêmes objectifs (l'esprit, pas le rituel) » | Les tests-après répondent « que fait ce code ? » ; les tests-d'abord répondent « que devrait faire ce code ? ». Les tests écrits après sont biaisés par le code déjà écrit — tu vérifies les cas dont tu te souviens, pas ceux que tu aurais découverts. De la couverture sans preuve que les tests fonctionnent. |
+| « Déjà testé manuellement » | Le test manuel est ad hoc : aucune trace de ce que tu as couvert, aucun moyen de le rejouer quand le code change, cas faciles à oublier sous pression. « Ça marchait quand j'ai essayé » ≠ exhaustif. Les tests automatisés s'exécutent de la même façon à chaque fois. |
+| « Supprimer X heures est du gâchis » | Sophisme des coûts irrécupérables — ce temps est déjà dépensé de toute façon. Le vrai choix : réécrire avec le TDD (haute confiance) vs. le garder et bricoler des tests après (faible confiance, bugs probables). Garder du code auquel tu ne peux pas te fier, voilà le gâchis. |
+| « Garder comme référence, écrire les tests d'abord » | Tu vas l'adapter. C'est tester après. Supprimer veut dire supprimer. |
+| « Besoin d'explorer d'abord » | D'accord. Jette l'exploration, recommence avec le TDD. |
+| « Test difficile = conception peu claire » | Écoute le test. Difficile à tester = difficile à utiliser. |
+| « Le TDD va me ralentir » | Le TDD EST la voie pragmatique : attrape les bugs avant le commit, prévient les régressions, te laisse refactoriser sans peur. Les raccourcis « pragmatiques » mènent au débogage en production — plus lent, pas plus rapide. |
+| « Le test manuel est plus rapide » | Le manuel ne prouve pas les cas limites. Tu re-testeras à chaque changement. |
+| « Le code existant n'a pas de tests » | Tu l'améliores. Ajoute des tests pour le code existant. |
 
-## Red Flags - STOP and Start Over
+## Signaux d'alarme - STOP et recommence
 
-- Code before test
-- Test after implementation
-- Test passes immediately
-- Can't explain why test failed
-- Tests added "later"
-- Rationalizing "just this once"
-- "I already manually tested it"
-- "Tests after achieve the same purpose"
-- "It's about spirit not ritual"
-- "Keep as reference" or "adapt existing code"
-- "Already spent X hours, deleting is wasteful"
-- "TDD is dogmatic, I'm being pragmatic"
-- "This is different because..."
+- Code avant le test
+- Test après l'implémentation
+- Le test passe immédiatement
+- Impossible d'expliquer pourquoi le test a échoué
+- Tests ajoutés « plus tard »
+- Rationaliser « juste cette fois »
+- « Je l'ai déjà testé manuellement »
+- « Tester après atteint le même but »
+- « C'est l'esprit, pas le rituel »
+- « Garder comme référence » ou « adapter le code existant »
+- « Déjà passé X heures, supprimer est du gâchis »
+- « Le TDD est dogmatique, je suis pragmatique »
+- « C'est différent parce que… »
 
-**All of these mean: Delete code. Start over with TDD.**
+**Tout cela signifie : supprime le code. Recommence avec le TDD.**
 
-## Example: Bug Fix
+## Exemple : correction de bug
 
-**Bug:** Empty email accepted
+**Bug :** email vide accepté
 
 **RED**
 ```typescript
@@ -255,7 +235,7 @@ test('rejects empty email', async () => {
 });
 ```
 
-**Verify RED**
+**Vérifier RED**
 ```bash
 $ npm test
 FAIL: expected 'Email required', got undefined
@@ -271,50 +251,50 @@ function submitForm(data: FormData) {
 }
 ```
 
-**Verify GREEN**
+**Vérifier GREEN**
 ```bash
 $ npm test
 PASS
 ```
 
 **REFACTOR**
-Extract validation for multiple fields if needed.
+Extraire la validation pour plusieurs champs si besoin.
 
-## Verification Checklist
+## Checklist de vérification
 
-Before marking work complete:
+Avant de marquer le travail comme terminé :
 
-- [ ] Every new function/method has a test
-- [ ] Watched each test fail before implementing
-- [ ] Each test failed for expected reason (feature missing, not typo)
-- [ ] Wrote minimal code to pass each test
-- [ ] All tests pass
-- [ ] Output pristine (no errors, warnings)
-- [ ] Tests use real code (mocks only if unavoidable)
-- [ ] Edge cases and errors covered
+- [ ] Chaque nouvelle fonction/méthode a un test
+- [ ] Regardé chaque test échouer avant d'implémenter
+- [ ] Chaque test a échoué pour la raison attendue (fonctionnalité manquante, pas faute de frappe)
+- [ ] Écrit le code minimal pour faire passer chaque test
+- [ ] Tous les tests passent
+- [ ] Sortie impeccable (aucune erreur, aucun avertissement)
+- [ ] Les tests utilisent du code réel (mocks uniquement si inévitable)
+- [ ] Cas limites et erreurs couverts
 
-Can't check all boxes? You skipped TDD. Start over.
+Impossible de cocher toutes les cases ? Tu as sauté le TDD. Recommence.
 
-## When Stuck
+## En cas de blocage
 
-| Problem | Solution |
+| Problème | Solution |
 |---------|----------|
-| Don't know how to test | Write wished-for API. Write assertion first. Ask your human partner. |
-| Test too complicated | Design too complicated. Simplify interface. |
-| Must mock everything | Code too coupled. Use dependency injection. |
-| Test setup huge | Extract helpers. Still complex? Simplify design. |
+| Ne sais pas comment tester | Écris l'API souhaitée. Écris l'assertion d'abord. Demande à ton partenaire humain. |
+| Test trop compliqué | Conception trop compliquée. Simplifie l'interface. |
+| Dois tout mocker | Code trop couplé. Utilise l'injection de dépendances. |
+| Setup de test énorme | Extrais des helpers. Toujours complexe ? Simplifie la conception. |
 
-## Debugging Integration
+## Intégration du débogage
 
-Bug found? Write failing test reproducing it. Follow TDD cycle. Test proves fix and prevents regression.
+Un bug trouvé ? Écris un test qui échoue et le reproduit. Suis le cycle TDD. Le test prouve la correction et prévient la régression.
 
-Never fix bugs without a test.
+Ne corrige jamais un bug sans test.
 
-## Final Rule
+## Règle finale
 
 ```
-Production code → test exists and failed first
-Otherwise → not TDD
+Code de production → un test existe et a échoué d'abord
+Sinon → ce n'est pas du TDD
 ```
 
-No exceptions without your human partner's permission.
+Aucune exception sans la permission de ton partenaire humain.

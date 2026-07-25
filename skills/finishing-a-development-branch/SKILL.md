@@ -3,19 +3,19 @@ name: finishing-a-development-branch
 description: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work
 ---
 
-# Finishing a Development Branch
+# Terminer une branche de développement
 
-## Overview
+## Vue d'ensemble
 
-**Core principle:** Verify tests → Detect environment → Present options → Execute choice → Clean up.
+**Principe fondamental :** vérifier les tests → détecter l'environnement → présenter les options → exécuter le choix → nettoyer.
 
-**Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
+**Annonce au début :** « J'utilise le skill finishing-a-development-branch pour terminer ce travail. »
 
-## Step 1: Verify Tests
+## Étape 1 : Vérifier les tests
 
-Run the project's full test suite (`npm test` / `cargo test` / `pytest` / `go test ./...`).
+Lance la suite de tests complète du projet (`npm test` / `cargo test` / `pytest` / `go test ./...`).
 
-**If tests fail**, report the failures and stop — the menu comes after a green suite:
+**Si les tests échouent**, rapporte les échecs et arrête-toi — le menu ne vient qu'après une suite au vert :
 
 ```
 Tests failing (<N> failures). Must fix before completing:
@@ -23,9 +23,9 @@ Tests failing (<N> failures). Must fix before completing:
 [Show failures]
 ```
 
-**If tests pass:** continue to Step 2.
+**Si les tests passent :** continue à l'étape 2.
 
-## Step 2: Detect Environment
+## Étape 2 : Détecter l'environnement
 
 ```bash
 GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
@@ -35,24 +35,21 @@ GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
 WORKTREE_PATH=$(git rev-parse --show-toplevel)
 ```
 
-This determines which menu to show and how cleanup works:
+Ceci détermine quel menu afficher et comment fonctionne le nettoyage :
 
-| State | Menu | Cleanup |
+| État | Menu | Nettoyage |
 |-------|------|---------|
-| `GIT_DIR == GIT_COMMON` (normal repo) | Standard 3 options | No worktree to clean up |
-| `GIT_DIR != GIT_COMMON`, named branch | Standard 3 options | Provenance-based (see Step 6) |
-| `GIT_DIR != GIT_COMMON`, detached HEAD | Reduced 2 options (no merge) | Externally managed — leave in place |
+| `GIT_DIR == GIT_COMMON` (dépôt normal) | 3 options standard | Aucun worktree à nettoyer |
+| `GIT_DIR != GIT_COMMON`, branche nommée | 3 options standard | Selon provenance (voir étape 6) |
+| `GIT_DIR != GIT_COMMON`, HEAD détachée | 2 options réduites (pas de merge) | Géré en externe — laisser en place |
 
-## Step 3: Determine Base Branch
+## Étape 3 : Déterminer la branche de base
 
-The base branch is whatever this work forked from — usually named in the
-plan, the conversation, or the branch's upstream. If it is not already
-known, ask: "This branch split from <your best guess> - is that correct?"
-Confirm before merging: merging into the wrong base is expensive to undo.
+La branche de base est celle d'où ce travail est parti — en général nommée dans le plan, la conversation, ou l'upstream de la branche. Si elle n'est pas déjà connue, demande : « Cette branche est partie de <ta meilleure estimation> - est-ce correct ? » Confirme avant de merger : merger sur la mauvaise base coûte cher à défaire.
 
-## Step 4: Present Options
+## Étape 4 : Présenter les options
 
-**Normal repo and named-branch worktree — present exactly these 3 options:**
+**Dépôt normal et worktree à branche nommée — présente exactement ces 3 options :**
 
 ```
 Implementation complete. What would you like to do?
@@ -64,7 +61,7 @@ Implementation complete. What would you like to do?
 Which option?
 ```
 
-**Detached HEAD — present exactly these 2 options:**
+**HEAD détachée — présente exactement ces 2 options :**
 
 ```
 Implementation complete. You're on a detached HEAD (externally managed workspace).
@@ -75,15 +72,11 @@ Implementation complete. You're on a detached HEAD (externally managed workspace
 Which option?
 ```
 
-Present the menu exactly as written — concise, with every option coming
-from the list above. Discarding the work happens only in response to your
-human partner explicitly asking for it (see "If your human partner asks to
-discard the work" below). Wait for their answer; the integration decision
-is theirs.
+Présente le menu exactement tel qu'écrit — concis, chaque option venant de la liste ci-dessus. Jeter le travail n'arrive qu'en réponse à une demande explicite de ton partenaire humain (voir « Si ton partenaire humain demande de jeter le travail » plus bas). Attends sa réponse ; la décision d'intégration lui revient.
 
-## Step 5: Execute Choice
+## Étape 5 : Exécuter le choix
 
-### Option 1: Merge Locally
+### Option 1 : Merger localement
 
 ```bash
 # Get main repo root for CWD safety
@@ -99,18 +92,15 @@ git merge <feature-branch>
 <test command>
 ```
 
-If tests fail on the merged result: stop, leave the worktree and branch in
-place, and investigate — nothing has been pushed, so the merge is local
-and recoverable.
+Si les tests échouent sur le résultat mergé : arrête-toi, laisse le worktree et la branche en place, et investigue — rien n'a été poussé, donc le merge est local et récupérable.
 
-Once the merged result is green: clean up the worktree (Step 6), then
-delete the branch:
+Une fois le résultat mergé au vert : nettoie le worktree (étape 6), puis supprime la branche :
 
 ```bash
 git branch -d <feature-branch>
 ```
 
-### Option 2: Push and Create PR
+### Option 2 : Pousser et créer une PR
 
 ```bash
 git push -u origin <feature-branch>
@@ -118,21 +108,17 @@ git push -u origin <feature-branch>
 # git push origin HEAD:refs/heads/<new-branch>
 ```
 
-Then create the pull/merge request against <base-branch> with the forge's
-tooling — its CLI if one is available, or the creation URL most forges
-print when you push — following the repo's PR template and conventions if
-present, and report the URL to your human partner.
+Crée ensuite la pull/merge request contre <base-branch> avec l'outillage de la forge — sa CLI si disponible, ou l'URL de création que la plupart des forges affichent au push — en suivant le gabarit de PR et les conventions du dépôt s'ils existent, et rapporte l'URL à ton partenaire humain.
 
-Keep the worktree — your human partner iterates on PR feedback there.
+Garde le worktree — ton partenaire humain itère dessus sur les retours de la PR.
 
-### Option 3: Keep As-Is
+### Option 3 : Garder tel quel
 
-Report: "Keeping branch <name>. Worktree preserved at <path>."
+Rapporte : « Je garde la branche <name>. Worktree préservé à <path>. »
 
-### If your human partner asks to discard the work
+### Si ton partenaire humain demande de jeter le travail
 
-This path exists only as a response to an explicit request to throw the
-work away. Confirm first:
+Ce chemin n'existe qu'en réponse à une demande explicite de jeter le travail. Confirme d'abord :
 
 ```
 This will permanently delete:
@@ -143,59 +129,53 @@ This will permanently delete:
 Type 'discard' to confirm.
 ```
 
-Wait for that exact confirmation. When it arrives:
+Attends cette confirmation exacte. Quand elle arrive :
 
 ```bash
 MAIN_ROOT=$(git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-toplevel)
 cd "$MAIN_ROOT"
 ```
 
-Then clean up the worktree (Step 6) and force-delete the branch:
+Puis nettoie le worktree (étape 6) et force la suppression de la branche :
 
 ```bash
 git branch -D <feature-branch>
 ```
 
-## Step 6: Cleanup Workspace
+## Étape 6 : Nettoyer l'espace de travail
 
-**Runs for Option 1 and confirmed discards.** Options 2 and 3 always
-preserve the worktree. Both callers have already changed directory to the
-main repo root — worktree removal must run from outside the worktree —
-and use the `GIT_DIR`/`GIT_COMMON`/`WORKTREE_PATH` values captured in
-Step 2, from before that directory change.
+**S'exécute pour l'option 1 et les jetages confirmés.** Les options 2 et 3 préservent toujours le worktree. Les deux appelants ont déjà changé de répertoire vers la racine du dépôt principal — le retrait du worktree doit s'exécuter depuis l'extérieur du worktree — et utilisent les valeurs `GIT_DIR`/`GIT_COMMON`/`WORKTREE_PATH` capturées à l'étape 2, avant ce changement de répertoire.
 
-**If `GIT_DIR == GIT_COMMON`:** Normal repo, no worktree to clean up. Done.
+**Si `GIT_DIR == GIT_COMMON` :** dépôt normal, aucun worktree à nettoyer. Terminé.
 
-**If `WORKTREE_PATH` is under `.worktrees/` or `worktrees/`:** Superpowers
-created this worktree — we own cleanup:
+**Si `WORKTREE_PATH` est sous `.worktrees/` ou `worktrees/` :** Superpowers a créé ce worktree — le nettoyage nous incombe :
 
 ```bash
 git worktree remove "$WORKTREE_PATH"
 git worktree prune  # Self-healing: clean up any stale registrations
 ```
 
-**Otherwise:** The host environment owns this workspace — leave it in
-place. If your platform provides a workspace-exit tool, use it.
+**Sinon :** l'environnement hôte possède cet espace de travail — laisse-le en place. Si ta plateforme fournit un outil de sortie d'espace de travail, utilise-le.
 
-## Quick Reference
+## Référence rapide
 
-| Option | Merge | Push | Keep Worktree | Cleanup Branch |
+| Option | Merge | Push | Garde le worktree | Nettoie la branche |
 |--------|-------|------|---------------|----------------|
-| 1. Merge locally | yes | - | - | yes |
-| 2. Create PR | - | yes | yes | - |
-| 3. Keep as-is | - | - | yes | - |
-| Discard (explicit request only) | - | - | - | yes (force) |
+| 1. Merger localement | oui | - | - | oui |
+| 2. Créer une PR | - | oui | oui | - |
+| 3. Garder tel quel | - | - | oui | - |
+| Jeter (sur demande explicite uniquement) | - | - | - | oui (forcé) |
 
-## Common Rationalizations
+## Rationalisations courantes
 
-| Excuse | Reality |
+| Excuse | Réalité |
 |--------|---------|
-| "Tests passed earlier this session" | Run the suite on the tree you are about to integrate. A green run only proves the tree it ran on. |
-| "They obviously want it merged" | Integration is your human partner's decision. Present the menu and wait. |
-| "They seem done with this feature — I'll offer to discard it" | The menu is complete as written. Discard happens only when your human partner asks for it in so many words. |
-| "'Yeah, get rid of it' counts as confirmation" | Only the typed word `discard` authorizes deletion. |
-| "The PR is up, so the worktree is clutter now" | PR feedback gets fixed in that worktree. It stays until the work lands. |
-| "This other worktree looks stale — I'll clean it too" | Clean up only worktrees under `.worktrees/` or `worktrees/`. Everything else belongs to the host. |
-| "The merged-result failure is probably flaky" | A failing merged result stops everything. Branch and worktree stay put while you investigate. |
-| "The base branch is obviously main" | Confirm the fork point or ask. Merging into the wrong base is expensive to undo. |
-| "The push was rejected — force-push will fix it" | A rejected push means the remote moved. Investigate; force-push only on your human partner's explicit request. |
+| « Les tests sont passés plus tôt dans la session » | Lance la suite sur l'arbre que tu t'apprêtes à intégrer. Un run au vert ne prouve que l'arbre sur lequel il a tourné. |
+| « De toute évidence il veut merger » | L'intégration est la décision de ton partenaire humain. Présente le menu et attends. |
+| « Il semble en avoir fini avec cette fonctionnalité — je vais proposer de la jeter » | Le menu est complet tel qu'écrit. Le jetage n'arrive que quand ton partenaire humain le demande explicitement. |
+| « "Ouais, dégage ça" vaut confirmation » | Seul le mot tapé `discard` autorise la suppression. |
+| « La PR est en place, donc le worktree n'est plus qu'un encombrement » | Les retours de PR se corrigent dans ce worktree. Il reste jusqu'à ce que le travail soit intégré. |
+| « Cet autre worktree a l'air périmé — je vais le nettoyer aussi » | Ne nettoie que les worktrees sous `.worktrees/` ou `worktrees/`. Tout le reste appartient à l'hôte. |
+| « L'échec du résultat mergé est sûrement instable » | Un résultat mergé qui échoue arrête tout. La branche et le worktree restent en place pendant que tu investigues. |
+| « La branche de base est évidemment main » | Confirme le point de fork ou demande. Merger sur la mauvaise base coûte cher à défaire. |
+| « Le push a été rejeté — un force-push va régler ça » | Un push rejeté signifie que le remote a bougé. Investigue ; ne force-push que sur demande explicite de ton partenaire humain. |
