@@ -6,8 +6,8 @@
 # invoke_subagent (self/research types) and task tracking via a task artifact —
 # and SKILL.md pointing at it.
 #
-# Mirrors tests/pi/test-pi-extension.mjs's "tools reference documents
-# harness-specific mappings" check. CI-safe: does not require `agy` installed.
+# Checks that the tools reference documents the harness-specific mappings.
+# CI-safe: does not require `agy` installed.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

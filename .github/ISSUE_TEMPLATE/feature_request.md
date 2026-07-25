@@ -38,7 +38,7 @@ progress, and some were intentionally declined.
 | Field | Value |
 |-------|-------|
 | Superpowers version | |
-| Harness (Claude Code, Cursor, etc.) | |
+| Harness (Claude Code, Antigravity) | |
 | Harness version | |
 | Your model + version | |
 | All plugins installed | |
