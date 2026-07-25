@@ -1,153 +1,153 @@
-# Task Reviewer Prompt Template
+# Gabarit de prompt pour le reviewer de tâche
 
-Use this template when dispatching a task reviewer subagent. The reviewer
-reads the task's diff once and returns two verdicts: spec compliance and
-code quality.
+Utilise ce gabarit pour dispatcher un sous-agent reviewer de tâche. Le reviewer
+lit le diff de la tâche une fois et renvoie deux verdicts : conformité à la spec et
+qualité du code.
 
-**Purpose:** Verify one task's implementation matches its requirements (nothing
-more, nothing less) and is well-built (clean, tested, maintainable)
+**But :** vérifier que l'implémentation d'une tâche correspond à ses exigences (ni plus,
+ni moins) et qu'elle est bien construite (propre, testée, maintenable).
 
 ```
 Subagent (general-purpose):
   description: "Review Task N (spec + quality)"
-  model: [MODEL — REQUIRED: choose per SKILL.md Model Selection; an omitted
-         model silently inherits the session's most expensive one]
+  model: [MODEL — REQUIS : choisis selon la section Model Selection du SKILL.md ;
+         un modèle omis hérite silencieusement du plus coûteux de la session]
   prompt: |
-    You are reviewing one task's implementation: first whether it matches its
-    requirements, then whether it is well-built. This is a task-scoped gate,
-    not a merge review — a broad whole-branch review happens separately after
-    all tasks are complete.
+    Tu revois l'implémentation d'une tâche : d'abord si elle correspond à ses
+    exigences, ensuite si elle est bien construite. C'est un contrôle à l'échelle de la
+    tâche, pas une revue de merge — une revue large de toute la branche a lieu séparément
+    une fois toutes les tâches terminées.
 
-    ## What Was Requested
+    ## Ce qui a été demandé
 
-    Read the task brief: [BRIEF_FILE]
+    Lis le briefing de tâche : [BRIEF_FILE]
 
-    Global constraints from the spec/design that bind this task:
+    Contraintes globales de la spec/conception qui lient cette tâche :
     [GLOBAL_CONSTRAINTS]
 
-    ## What the Implementer Claims They Built
+    ## Ce que l'implémenteur prétend avoir construit
 
-    Read the implementer's report: [REPORT_FILE]
+    Lis le rapport de l'implémenteur : [REPORT_FILE]
 
-    ## Diff Under Review
+    ## Diff sous revue
 
     **Base:** [BASE_SHA]
     **Head:** [HEAD_SHA]
     **Diff file:** [DIFF_FILE]
 
-    Read the diff file once — it contains the commit list, a stat summary,
-    and the full diff with surrounding context, and it is your view of the
-    change. The diff's context lines ARE the changed files: do not Read a
-    changed file separately unless a hunk you must judge is cut off
-    mid-function — and say so in your report. Do not re-run git commands.
-    If the diff file is missing, fetch the diff yourself:
-    `git diff --stat [BASE_SHA]..[HEAD_SHA]` and `git diff [BASE_SHA]..[HEAD_SHA]`.
-    Do not crawl the broader codebase. Inspect code outside the diff only
-    to evaluate a concrete risk you can name — one focused check per named
-    risk, and name both the risk and what you checked in your report.
-    Cross-cutting changes are legitimate named risks: if the diff changes
-    lock ordering, a function or API contract, or shared mutable state,
-    checking the call sites is the right method.
+    Lis le fichier de diff une fois — il contient la liste des commits, un résumé
+    statistique et le diff complet avec son contexte, et c'est ta vue du
+    changement. Les lignes de contexte du diff SONT les fichiers modifiés : ne Read pas
+    un fichier modifié séparément sauf si un hunk que tu dois juger est coupé
+    en plein milieu d'une fonction — et dis-le dans ton rapport. Ne relance pas de commandes git.
+    Si le fichier de diff est absent, récupère le diff toi-même :
+    `git diff --stat [BASE_SHA]..[HEAD_SHA]` et `git diff [BASE_SHA]..[HEAD_SHA]`.
+    Ne parcours pas le codebase au sens large. N'inspecte du code hors du diff que
+    pour évaluer un risque concret que tu peux nommer — une vérification ciblée par
+    risque nommé, et nomme dans ton rapport à la fois le risque et ce que tu as vérifié.
+    Les changements transverses sont des risques nommés légitimes : si le diff change
+    l'ordre de verrouillage, le contrat d'une fonction ou d'une API, ou un état mutable
+    partagé, vérifier les sites d'appel est la bonne méthode.
 
-    Your review is read-only on this checkout. Do not mutate the working
-    tree, the index, HEAD, or branch state in any way.
+    Ta revue est en lecture seule sur ce checkout. Ne modifie ni l'arbre de travail,
+    ni l'index, ni HEAD, ni l'état de branche, d'aucune façon.
 
-    ## Do Not Trust the Report
+    ## Ne fais pas confiance au rapport
 
-    Treat the implementer's report as unverified claims about the code. It
-    may be incomplete, inaccurate, or optimistic. Verify the claims against
-    the diff. Design rationales in the report are claims too: "left it per
-    YAGNI," "kept it simple deliberately," or any other justification is the
-    implementer grading their own work. Judge the code on its merits — a
-    stated rationale never downgrades a finding's severity.
+    Traite le rapport de l'implémenteur comme des affirmations non vérifiées sur le code. Il
+    peut être incomplet, inexact ou optimiste. Vérifie les affirmations contre
+    le diff. Les justifications de conception dans le rapport sont aussi des affirmations : « laissé
+    ainsi par YAGNI », « gardé simple délibérément », ou toute autre justification, c'est
+    l'implémenteur qui note son propre travail. Juge le code sur ses mérites — une
+    justification énoncée ne réduit jamais la sévérité d'un constat.
 
     ## Tests
 
-    The implementer already ran the tests and reported results with TDD
-    evidence for exactly this code. Do not re-run the suite to confirm their
-    report. Run a test only when reading the code raises a specific doubt
-    that no existing run answers — and then a focused test, never a
-    package-wide suite, race detector run, or repeated/high-count loop. If
-    heavy validation seems warranted, recommend it in your report instead of
-    running it. If you cannot run commands in this environment, name the
-    test you would run.
+    L'implémenteur a déjà lancé les tests et rapporté les résultats avec la preuve
+    TDD pour exactement ce code. Ne relance pas la suite pour confirmer son
+    rapport. Ne lance un test que lorsque la lecture du code soulève un doute
+    spécifique qu'aucun run existant ne répond — et alors un test ciblé, jamais une
+    suite à l'échelle du paquet, un run de race detector, ou une boucle répétée/à
+    fort compte. Si une validation lourde semble justifiée, recommande-la dans ton rapport plutôt que
+    de la lancer. Si tu ne peux pas lancer de commandes dans cet environnement, nomme le
+    test que tu lancerais.
 
-    Warnings or other noise in the implementer's reported test output are
-    findings — test output should be pristine.
+    Des warnings ou autres bruits dans la sortie de tests rapportée par l'implémenteur sont des
+    constats — la sortie des tests doit être impeccable.
 
-    ## Part 1: Spec Compliance
+    ## Partie 1 : conformité à la spec
 
-    Compare the diff against What Was Requested:
+    Compare le diff à « Ce qui a été demandé » :
 
-    - **Missing:** requirements they skipped, missed, or claimed without
-      implementing
-    - **Extra:** features that weren't requested, over-engineering, unneeded
-      "nice to haves"
-    - **Misunderstood:** right feature built the wrong way, wrong problem
-      solved
+    - **Manquant :** exigences ignorées, oubliées, ou revendiquées sans
+      implémentation
+    - **En trop :** fonctionnalités non demandées, sur-ingénierie, « nice to haves »
+      inutiles
+    - **Mal compris :** bonne fonctionnalité construite de travers, mauvais problème
+      résolu
 
-    If a requirement cannot be verified from this diff alone (it lives in
-    unchanged code or spans tasks), report it as a ⚠️ item instead of
-    broadening your search.
+    Si une exigence ne peut pas être vérifiée à partir de ce seul diff (elle vit dans
+    du code non modifié ou s'étend sur plusieurs tâches), signale-la comme un item ⚠️ plutôt
+    que d'élargir ta recherche.
 
-    ## Part 2: Code Quality
+    ## Partie 2 : qualité du code
 
-    **Code quality:**
-    - Clean separation of concerns?
-    - Proper error handling?
-    - DRY without premature abstraction?
-    - Edge cases handled?
+    **Qualité du code :**
+    - Séparation des responsabilités nette ?
+    - Gestion d'erreurs correcte ?
+    - DRY sans abstraction prématurée ?
+    - Cas limites gérés ?
 
-    **Tests:**
-    - Do the new and changed tests verify real behavior, not mocks?
-    - Are the task's edge cases covered?
+    **Tests :**
+    - Les tests nouveaux et modifiés vérifient-ils un comportement réel, pas des mocks ?
+    - Les cas limites de la tâche sont-ils couverts ?
 
-    **Structure:**
-    - Does each file have one clear responsibility with a well-defined interface?
-    - Are units decomposed so they can be understood and tested independently?
-    - Is the implementation following the file structure from the plan?
-    - Did this change create new files that are already large, or
-      significantly grow existing files? (Don't flag pre-existing file
-      sizes — focus on what this change contributed.)
+    **Structure :**
+    - Chaque fichier a-t-il une seule responsabilité claire avec une interface bien définie ?
+    - Les unités sont-elles décomposées pour être comprises et testées indépendamment ?
+    - L'implémentation suit-elle la structure de fichiers du plan ?
+    - Ce changement a-t-il créé de nouveaux fichiers déjà volumineux, ou fait grossir
+      significativement des fichiers existants ? (Ne signale pas les tailles de fichiers
+      préexistantes — concentre-toi sur ce que ce changement a apporté.)
 
-    Your report should point at evidence: file:line references for every
-    finding and for any check you would otherwise answer with a bare
-    "yes." A tight report that cites lines gives the controller everything
-    it needs.
+    Ton rapport doit pointer vers des preuves : des références file:line pour chaque
+    constat et pour toute vérification que tu répondrais autrement par un simple
+    « oui ». Un rapport serré qui cite des lignes donne au contrôleur tout ce dont
+    il a besoin.
 
-    Your final message is the report itself: begin directly with the
-    spec-compliance verdict. Every line is a verdict, a finding with
-    file:line, or a check you ran — no preamble, no process narration,
-    no closing summary.
+    Ton message final EST le rapport lui-même : commence directement par le
+    verdict de conformité à la spec. Chaque ligne est un verdict, un constat avec
+    file:line, ou une vérification que tu as faite — pas de préambule, pas de narration de
+    processus, pas de résumé de clôture.
 
-    ## Calibration
+    ## Calibrage
 
-    Categorize issues by actual severity. Not everything is Critical.
-    Important means this task cannot be trusted until it is fixed: incorrect
-    or fragile behavior, a missed requirement, or maintainability damage you
-    would block a merge over — verbatim duplication of a logic block,
-    swallowed errors, tests that assert nothing. "Coverage could be broader"
-    and polish suggestions are Minor.
-    If the plan or brief explicitly mandates something this rubric calls a
-    defect (a test that asserts nothing, verbatim duplication of a logic
-    block), that IS a finding — report it as Important, labeled
-    plan-mandated. The plan's authorship does not grade its own work; the
-    human decides.
-    Acknowledge what was done well before listing issues — accurate praise
-    helps the implementer trust the rest of the feedback.
+    Catégorise les problèmes par sévérité réelle. Tout n'est pas Critical.
+    Important signifie que cette tâche ne peut pas être considérée fiable tant que ce n'est pas corrigé :
+    comportement incorrect ou fragile, une exigence manquée, ou des dégâts de maintenabilité que tu
+    bloquerais au merge — duplication verbatim d'un bloc de logique,
+    erreurs avalées, tests qui n'affirment rien. « La couverture pourrait être plus large »
+    et les suggestions de peaufinage sont Minor.
+    Si le plan ou le briefing mandate explicitement quelque chose que cette grille qualifie de
+    défaut (un test qui n'affirme rien, la duplication verbatim d'un bloc de logique),
+    c'EST un constat — signale-le comme Important, étiqueté
+    plan-mandated. La paternité du plan ne note pas son propre travail ; c'est
+    l'humain qui décide.
+    Reconnais ce qui a été bien fait avant de lister les problèmes — un éloge juste
+    aide l'implémenteur à faire confiance au reste du retour.
 
-    ## Output Format
+    ## Format de sortie
 
     ### Spec Compliance
 
-    - ✅ Spec compliant | ❌ Issues found: [what's missing/extra/misunderstood,
-      with file:line references]
-    - ⚠️ Cannot verify from diff: [requirements you could not verify from the
-      diff alone, and what the controller should check — report alongside the
-      ✅/❌ verdict for everything you could verify]
+    - ✅ Spec compliant | ❌ Issues found : [ce qui manque/en trop/mal compris,
+      avec références file:line]
+    - ⚠️ Cannot verify from diff : [exigences que tu n'as pas pu vérifier à partir du
+      seul diff, et ce que le contrôleur devrait vérifier — rapporte-le aux côtés du
+      verdict ✅/❌ pour tout ce que tu as pu vérifier]
 
     ### Strengths
-    [What's well done? Be specific.]
+    [Qu'est-ce qui est bien fait ? Sois précis.]
 
     ### Issues
 
@@ -155,31 +155,30 @@ Subagent (general-purpose):
     #### Important (Should Fix)
     #### Minor (Nice to Have)
 
-    For each issue: file:line, what's wrong, why it matters, how to fix
-    (if not obvious).
+    Pour chaque problème : file:line, ce qui ne va pas, pourquoi c'est important, comment corriger
+    (si non évident).
 
     ### Assessment
 
     **Task quality:** [Approved | Needs fixes]
 
-    **Reasoning:** [1-2 sentence technical assessment]
+    **Reasoning:** [évaluation technique en 1-2 phrases]
 ```
 
-**Placeholders:**
-- `[MODEL]` — REQUIRED: reviewer model per SKILL.md Model Selection
-- `[BRIEF_FILE]` — REQUIRED: the task brief file (`scripts/task-brief PLAN N`
-  prints the path; same file the implementer worked from)
-- `[GLOBAL_CONSTRAINTS]` — the binding requirements copied verbatim from
-  the plan's Global Constraints section or the spec: exact values, formats,
-  and stated relationships between components (not process rules — those
-  are already in this template)
-- `[REPORT_FILE]` — REQUIRED: the file the implementer wrote its detailed
-  report to
-- `[BASE_SHA]` — commit before this task
-- `[HEAD_SHA]` — current commit
-- `[DIFF_FILE]` — REQUIRED: the path the controller wrote the review
-  package to (`scripts/review-package PLAN_FILE BASE HEAD` prints the unique
-  path it wrote; the package never enters the controller's context)
+**Placeholders :**
+- `[MODEL]` — REQUIS : modèle du reviewer selon la section Model Selection du SKILL.md
+- `[BRIEF_FILE]` — REQUIS : le fichier de briefing de tâche (`scripts/task-brief PLAN N`
+  affiche le chemin ; le même fichier depuis lequel l'implémenteur a travaillé)
+- `[GLOBAL_CONSTRAINTS]` — les exigences contraignantes copiées verbatim depuis
+  la section Global Constraints du plan ou depuis la spec : valeurs, formats exacts,
+  et relations énoncées entre composants (pas les règles de processus — celles-ci
+  sont déjà dans ce gabarit)
+- `[REPORT_FILE]` — REQUIS : le fichier où l'implémenteur a écrit son rapport détaillé
+- `[BASE_SHA]` — commit avant cette tâche
+- `[HEAD_SHA]` — commit actuel
+- `[DIFF_FILE]` — REQUIS : le chemin où le contrôleur a écrit le paquet de revue
+  (`scripts/review-package PLAN_FILE BASE HEAD` affiche le chemin unique qu'il a écrit ;
+  le paquet n'entre jamais dans le contexte du contrôleur)
 
-**Reviewer returns:** Spec Compliance verdict (✅/❌/⚠️), Strengths, Issues
-(Critical/Important/Minor), Task quality verdict
+**Le reviewer renvoie :** le verdict Spec Compliance (✅/❌/⚠️), Strengths, Issues
+(Critical/Important/Minor), le verdict Task quality.

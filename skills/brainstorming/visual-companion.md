@@ -1,75 +1,70 @@
-# Visual Companion Guide
+# Guide du compagnon visuel
 
-Browser-based visual brainstorming companion for showing mockups, diagrams, and options.
+Compagnon de brainstorming visuel en navigateur, pour montrer des maquettes, des diagrammes et des options.
 
-## When to Use
+## Quand l'utiliser
 
-Decide per-question, not per-session. The test: **would the user understand this better by seeing it than reading it?**
+Décide question par question, pas session par session. Le test : **l'utilisateur comprendrait-il mieux en le voyant qu'en le lisant ?**
 
-**Use the browser** when the content itself is visual:
+**Utilise le navigateur** quand le contenu est lui-même visuel :
 
-- **UI mockups** — wireframes, layouts, navigation structures, component designs
-- **Architecture diagrams** — system components, data flow, relationship maps
-- **Side-by-side visual comparisons** — comparing two layouts, two color schemes, two design directions
-- **Design polish** — when the question is about look and feel, spacing, visual hierarchy
-- **Spatial relationships** — state machines, flowcharts, entity relationships rendered as diagrams
+- **Maquettes d'UI** — wireframes, mises en page, structures de navigation, designs de composants
+- **Diagrammes d'architecture** — composants système, flux de données, cartes de relations
+- **Comparaisons visuelles côte à côte** — comparer deux mises en page, deux jeux de couleurs, deux directions de design
+- **Finition du design** — quand la question porte sur le look and feel, l'espacement, la hiérarchie visuelle
+- **Relations spatiales** — machines à états, organigrammes, relations entre entités rendues sous forme de diagrammes
 
-**Use the terminal** when the content is text or tabular:
+**Utilise le terminal** quand le contenu est textuel ou tabulaire :
 
-- **Requirements and scope questions** — "what does X mean?", "which features are in scope?"
-- **Conceptual A/B/C choices** — picking between approaches described in words
-- **Tradeoff lists** — pros/cons, comparison tables
-- **Technical decisions** — API design, data modeling, architectural approach selection
-- **Clarifying questions** — anything where the answer is words, not a visual preference
+- **Questions d'exigences et de périmètre** — « que signifie X ? », « quelles fonctionnalités sont dans le périmètre ? »
+- **Choix conceptuels A/B/C** — trancher entre des approches décrites avec des mots
+- **Listes d'arbitrages** — pour/contre, tableaux comparatifs
+- **Décisions techniques** — design d'API, modélisation de données, choix d'approche architecturale
+- **Questions de clarification** — tout ce dont la réponse est des mots, pas une préférence visuelle
 
-A question *about* a UI topic is not automatically a visual question. "What kind of wizard do you want?" is conceptual — use the terminal. "Which of these wizard layouts feels right?" is visual — use the browser.
+Une question *portant sur* un sujet d'UI n'est pas automatiquement une question visuelle. « Quel type d'assistant veux-tu ? » est conceptuel — utilise le terminal. « Laquelle de ces mises en page d'assistant te semble juste ? » est visuel — utilise le navigateur.
 
-## How It Works
+## Comment ça marche
 
-The server watches a directory for HTML files and serves the newest one to the browser. You write HTML content to `screen_dir`, the user sees it in their browser and can click to select options. Selections are recorded to `state_dir/events` that you read on your next turn.
+Le serveur surveille un répertoire à la recherche de fichiers HTML et sert le plus récent au navigateur. Tu écris du contenu HTML dans `screen_dir`, l'utilisateur le voit dans son navigateur et peut cliquer pour sélectionner des options. Les sélections sont enregistrées dans `state_dir/events`, que tu lis à ton tour suivant.
 
-**Content fragments vs full documents:** If your HTML file starts with `<!DOCTYPE` or `<html`, the server serves it as-is (just injects the helper script). Otherwise, the server automatically wraps your content in the frame template — adding the header, CSS theme, connection status, and all interactive infrastructure. **Write content fragments by default.** Only write full documents when you need complete control over the page.
+**Fragments de contenu vs documents complets :** si ton fichier HTML commence par `<!DOCTYPE` ou `<html`, le serveur le sert tel quel (il injecte juste le script d'aide). Sinon, le serveur enrobe automatiquement ton contenu dans le template de cadre — ajoutant l'en-tête, le thème CSS, l'état de connexion et toute l'infrastructure interactive. **Écris des fragments de contenu par défaut.** N'écris des documents complets que lorsque tu as besoin d'un contrôle total sur la page.
 
-## Starting a Session
+## Démarrer une session
 
 ```bash
-# Start AFTER the user approves the companion. --open auto-opens their browser on
-# the first screen; --project-dir persists mockups and enables same-port restart.
+# Démarre APRÈS que l'utilisateur a approuvé le compagnon. --open ouvre automatiquement
+# son navigateur sur le premier écran ; --project-dir persiste les maquettes et permet le
+# redémarrage sur le même port.
 scripts/start-server.sh --project-dir /path/to/project --open
 
-# Returns: {"type":"server-started","port":52341,
+# Renvoie : {"type":"server-started","port":52341,
 #           "url":"http://localhost:52341/?key=ab12…",
 #           "screen_dir":"/path/to/project/.superpowers/brainstorm/12345-1706000000/content",
 #           "state_dir":"/path/to/project/.superpowers/brainstorm/12345-1706000000/state"}
 ```
 
-Save `screen_dir` and `state_dir` from the response. With `--open`, the browser opens itself when you push the first screen — you don't need to ask the user to open it, but still share the URL as a fallback (headless/remote setups won't auto-open).
+Enregistre `screen_dir` et `state_dir` depuis la réponse. Avec `--open`, le navigateur s'ouvre de lui-même quand tu pousses le premier écran — tu n'as pas besoin de demander à l'utilisateur de l'ouvrir, mais partage quand même l'URL en secours (les configurations headless/distantes ne s'ouvrent pas automatiquement).
 
-**The URL contains a session key (`?key=…`).** The server rejects any request
-without it, so always give the user the **complete** URL from the `url` field —
-never strip the query string, and never hand out a bare `http://host:port`. The
-key gates HTTP and WebSocket access so a stray browser tab or another machine on
-the network can't read the screens or inject events. After the first load the
-browser remembers the key via a cookie, so reloads and `/files/*` assets work
-without repeating it.
+**L'URL contient une clé de session (`?key=…`).** Le serveur rejette toute requête sans elle, alors donne toujours à l'utilisateur l'URL **complète** du champ `url` — ne retire jamais la query string, et ne distribue jamais un simple `http://host:port`. La clé protège l'accès HTTP et WebSocket, pour qu'un onglet de navigateur égaré ou une autre machine du réseau ne puisse pas lire les écrans ni injecter d'événements. Après le premier chargement, le navigateur mémorise la clé via un cookie, donc les rechargements et les ressources `/files/*` fonctionnent sans la répéter.
 
-**Finding connection info:** The server writes its startup JSON to `$STATE_DIR/server-info`. If you launched the server in the background and didn't capture stdout, read that file to get the URL and port. When using `--project-dir`, check `<project>/.superpowers/brainstorm/` for the session directory.
+**Trouver les infos de connexion :** le serveur écrit son JSON de démarrage dans `$STATE_DIR/server-info`. Si tu as lancé le serveur en arrière-plan sans capturer stdout, lis ce fichier pour obtenir l'URL et le port. Avec `--project-dir`, regarde `<project>/.superpowers/brainstorm/` pour le répertoire de session.
 
-**Note:** Pass the project root as `--project-dir` so mockups persist in `.superpowers/brainstorm/` and survive server restarts. Without it, files go to `/tmp` and get cleaned up. Remind the user to add `.superpowers/` to `.gitignore` if it's not already there.
+**Note :** passe la racine du projet en `--project-dir` pour que les maquettes persistent dans `.superpowers/brainstorm/` et survivent aux redémarrages du serveur. Sans cela, les fichiers vont dans `/tmp` et sont nettoyés. Rappelle à l'utilisateur d'ajouter `.superpowers/` à `.gitignore` si ce n'est pas déjà fait.
 
-**Launching the server by platform:**
+**Lancer le serveur selon la plateforme :**
 
-**Claude Code:**
+**Claude Code :**
 ```bash
-# Default mode works — the script backgrounds the server itself.
+# Le mode par défaut fonctionne — le script met lui-même le serveur en arrière-plan.
 scripts/start-server.sh --project-dir /path/to/project --open
 ```
 
-On Windows, the script auto-detects and switches to foreground mode (which blocks the tool call). Use `run_in_background: true` on the Bash tool call so the server survives across conversation turns, then read `$STATE_DIR/server-info` on the next turn to get the URL and port.
+Sous Windows, le script détecte automatiquement et bascule en mode premier plan (ce qui bloque l'appel d'outil). Utilise `run_in_background: true` sur l'appel à l'outil Bash pour que le serveur survive d'un tour de conversation à l'autre, puis lis `$STATE_DIR/server-info` au tour suivant pour obtenir l'URL et le port.
 
-**Other environments:** The server must keep running in the background across conversation turns. If your environment reaps detached processes, use `--foreground` and launch the command with your platform's background execution mechanism.
+**Autres environnements :** le serveur doit continuer à tourner en arrière-plan d'un tour de conversation à l'autre. Si ton environnement tue les processus détachés, utilise `--foreground` et lance la commande avec le mécanisme d'exécution en arrière-plan de ta plateforme.
 
-If the URL is unreachable from your browser (common in remote/containerized setups), bind a non-loopback host:
+Si l'URL est injoignable depuis ton navigateur (fréquent en configuration distante/conteneurisée), lie un hôte non-loopback :
 
 ```bash
 scripts/start-server.sh \
@@ -78,30 +73,30 @@ scripts/start-server.sh \
   --url-host localhost
 ```
 
-Use `--url-host` to control what hostname is printed in the returned URL JSON.
+Utilise `--url-host` pour contrôler le nom d'hôte imprimé dans le JSON d'URL renvoyé.
 
-## The Loop
+## La boucle
 
-1. **Check server is alive**, then **write HTML** to a new file in `screen_dir`:
-   - **Required: confirm the server is alive before referring to the URL or pushing a screen.** Check that `$STATE_DIR/server-info` exists and `$STATE_DIR/server-stopped` does not. If it has shut down, restart it with `start-server.sh` using the **same `--project-dir`** — it reuses the same port, so the user's open tab reconnects on its own (it shows a "paused" overlay while the server is down) and you don't need to send a new URL. The server auto-exits after 4 hours idle (configurable with `--idle-timeout-minutes`).
-   - Use semantic filenames: `platform.html`, `visual-style.html`, `layout.html`
-   - **Never reuse filenames** — each screen gets a fresh file
-   - Use your file-creation tool — **never use cat/heredoc** (dumps noise into terminal)
-   - Server automatically serves the newest file
+1. **Vérifie que le serveur est vivant**, puis **écris du HTML** dans un nouveau fichier de `screen_dir` :
+   - **Requis : confirme que le serveur est vivant avant de faire référence à l'URL ou de pousser un écran.** Vérifie que `$STATE_DIR/server-info` existe et que `$STATE_DIR/server-stopped` n'existe pas. S'il s'est arrêté, redémarre-le avec `start-server.sh` en utilisant le **même `--project-dir`** — il réutilise le même port, donc l'onglet ouvert de l'utilisateur se reconnecte de lui-même (il affiche une surcouche « paused » pendant l'arrêt) et tu n'as pas besoin d'envoyer une nouvelle URL. Le serveur s'arrête automatiquement après 4 heures d'inactivité (configurable avec `--idle-timeout-minutes`).
+   - Utilise des noms de fichiers sémantiques : `platform.html`, `visual-style.html`, `layout.html`
+   - **Ne réutilise jamais un nom de fichier** — chaque écran obtient un fichier neuf
+   - Utilise ton outil de création de fichier — **n'utilise jamais cat/heredoc** (ça déverse du bruit dans le terminal)
+   - Le serveur sert automatiquement le fichier le plus récent
 
-2. **Tell user what to expect and end your turn:**
-   - Remind them of the URL (every step, not just first)
-   - Give a brief text summary of what's on screen (e.g., "Showing 3 layout options for the homepage")
-   - Ask them to respond in the terminal: "Take a look and let me know what you think. Click to select an option if you'd like."
+2. **Dis à l'utilisateur à quoi s'attendre et termine ton tour :**
+   - Rappelle-lui l'URL (à chaque étape, pas seulement la première)
+   - Donne un bref résumé textuel de ce qui est à l'écran (p. ex. « J'affiche 3 options de mise en page pour la page d'accueil »)
+   - Demande-lui de répondre dans le terminal : « Jette un œil et dis-moi ce que tu en penses. Clique pour sélectionner une option si tu veux. »
 
-3. **On your next turn** — after the user responds in the terminal:
-   - Read `$STATE_DIR/events` if it exists — this contains the user's browser interactions (clicks, selections) as JSON lines
-   - Merge with the user's terminal text to get the full picture
-   - The terminal message is the primary feedback; `state_dir/events` provides structured interaction data
+3. **À ton tour suivant** — après que l'utilisateur a répondu dans le terminal :
+   - Lis `$STATE_DIR/events` s'il existe — il contient les interactions navigateur de l'utilisateur (clics, sélections) sous forme de lignes JSON
+   - Fusionne avec le texte terminal de l'utilisateur pour avoir le tableau complet
+   - Le message terminal est le retour principal ; `state_dir/events` fournit les données d'interaction structurées
 
-4. **Iterate or advance** — if feedback changes current screen, write a new file (e.g., `layout-v2.html`). Only move to the next question when the current step is validated.
+4. **Itère ou avance** — si le retour change l'écran courant, écris un nouveau fichier (p. ex. `layout-v2.html`). Ne passe à la question suivante que lorsque l'étape courante est validée.
 
-5. **Unload when returning to terminal** — when the next step doesn't need the browser (e.g., a clarifying question, a tradeoff discussion), push a waiting screen to clear the stale content:
+5. **Décharge en revenant au terminal** — quand l'étape suivante n'a pas besoin du navigateur (p. ex. une question de clarification, une discussion d'arbitrage), pousse un écran d'attente pour effacer le contenu périmé :
 
    ```html
    <!-- filename: waiting.html (or waiting-2.html, etc.) -->
@@ -110,15 +105,15 @@ Use `--url-host` to control what hostname is printed in the returned URL JSON.
    </div>
    ```
 
-   This prevents the user from staring at a resolved choice while the conversation has moved on. When the next visual question comes up, push a new content file as usual.
+   Cela évite que l'utilisateur reste à fixer un choix déjà résolu alors que la conversation a avancé. Quand la prochaine question visuelle se présente, pousse un nouveau fichier de contenu comme d'habitude.
 
-6. Repeat until done.
+6. Répète jusqu'à la fin.
 
-## Writing Content Fragments
+## Écrire des fragments de contenu
 
-Write just the content that goes inside the page. The server wraps it in the frame template automatically (header, theme CSS, connection status, and all interactive infrastructure).
+Écris juste le contenu qui va à l'intérieur de la page. Le serveur l'enrobe automatiquement dans le template de cadre (en-tête, thème CSS, état de connexion et toute l'infrastructure interactive).
 
-**Minimal example:**
+**Exemple minimal :**
 
 ```html
 <h2>Which layout works better?</h2>
@@ -142,13 +137,13 @@ Write just the content that goes inside the page. The server wraps it in the fra
 </div>
 ```
 
-That's it. No `<html>`, no CSS, no `<script>` tags needed. The server provides all of that.
+C'est tout. Pas de `<html>`, pas de CSS, pas de balises `<script>`. Le serveur fournit tout cela.
 
-## CSS Classes Available
+## Classes CSS disponibles
 
-The frame template provides these CSS classes for your content:
+Le template de cadre fournit ces classes CSS pour ton contenu :
 
-### Options (A/B/C choices)
+### Options (choix A/B/C)
 
 ```html
 <div class="options">
@@ -162,7 +157,7 @@ The frame template provides these CSS classes for your content:
 </div>
 ```
 
-**Multi-select:** Add `data-multiselect` to the container to let users select multiple options. Each click toggles the item's selected styling.
+**Multi-sélection :** ajoute `data-multiselect` au conteneur pour laisser les utilisateurs sélectionner plusieurs options. Chaque clic bascule le style sélectionné de l'élément.
 
 ```html
 <div class="options" data-multiselect>
@@ -170,7 +165,7 @@ The frame template provides these CSS classes for your content:
 </div>
 ```
 
-### Cards (visual designs)
+### Cards (designs visuels)
 
 ```html
 <div class="cards">
@@ -184,7 +179,7 @@ The frame template provides these CSS classes for your content:
 </div>
 ```
 
-### Mockup container
+### Conteneur de maquette
 
 ```html
 <div class="mockup">
@@ -193,7 +188,7 @@ The frame template provides these CSS classes for your content:
 </div>
 ```
 
-### Split view (side-by-side)
+### Vue partagée (côte à côte)
 
 ```html
 <div class="split">
@@ -202,7 +197,7 @@ The frame template provides these CSS classes for your content:
 </div>
 ```
 
-### Pros/Cons
+### Pour/Contre
 
 ```html
 <div class="pros-cons">
@@ -211,7 +206,7 @@ The frame template provides these CSS classes for your content:
 </div>
 ```
 
-### Mock elements (wireframe building blocks)
+### Éléments de maquette (briques de wireframe)
 
 ```html
 <div class="mock-nav">Logo | Home | About | Contact</div>
@@ -224,17 +219,17 @@ The frame template provides these CSS classes for your content:
 <div class="placeholder">Placeholder area</div>
 ```
 
-### Typography and sections
+### Typographie et sections
 
-- `h2` — page title
-- `h3` — section heading
-- `.subtitle` — secondary text below title
-- `.section` — content block with bottom margin
-- `.label` — small uppercase label text
+- `h2` — titre de page
+- `h3` — titre de section
+- `.subtitle` — texte secondaire sous le titre
+- `.section` — bloc de contenu avec marge basse
+- `.label` — petit texte de label en majuscules
 
-## Browser Events Format
+## Format des événements navigateur
 
-When the user clicks options in the browser, their interactions are recorded to `$STATE_DIR/events` (one JSON object per line). The file is cleared automatically when you push a new screen.
+Quand l'utilisateur clique sur des options dans le navigateur, ses interactions sont enregistrées dans `$STATE_DIR/events` (un objet JSON par ligne). Le fichier est vidé automatiquement quand tu pousses un nouvel écran.
 
 ```jsonl
 {"type":"click","choice":"a","text":"Option A - Simple Layout","timestamp":1706000101}
@@ -242,35 +237,35 @@ When the user clicks options in the browser, their interactions are recorded to 
 {"type":"click","choice":"b","text":"Option B - Hybrid","timestamp":1706000115}
 ```
 
-The full event stream shows the user's exploration path — they may click multiple options before settling. The last `choice` event is typically the final selection, but the pattern of clicks can reveal hesitation or preferences worth asking about.
+Le flux d'événements complet montre le chemin d'exploration de l'utilisateur — il peut cliquer plusieurs options avant de se décider. Le dernier événement `choice` est généralement la sélection finale, mais le motif des clics peut révéler une hésitation ou des préférences qui valent la peine d'être creusées.
 
-If `$STATE_DIR/events` doesn't exist, the user didn't interact with the browser — use only their terminal text.
+Si `$STATE_DIR/events` n'existe pas, l'utilisateur n'a pas interagi avec le navigateur — utilise seulement son texte terminal.
 
-## Design Tips
+## Conseils de design
 
-- **Scale fidelity to the question** — wireframes for layout, polish for polish questions
-- **Explain the question on each page** — "Which layout feels more professional?" not just "Pick one"
-- **Iterate before advancing** — if feedback changes current screen, write a new version
-- **2-4 options max** per screen
-- **Use real content when it matters** — for a photography portfolio, use actual images (Unsplash). Placeholder content obscures design issues.
-- **Keep mockups simple** — focus on layout and structure, not pixel-perfect design
+- **Ajuste la fidélité à la question** — wireframes pour la mise en page, finition pour les questions de finition
+- **Explique la question sur chaque page** — « Quelle mise en page paraît plus professionnelle ? » et non juste « Choisis-en une »
+- **Itère avant d'avancer** — si le retour change l'écran courant, écris une nouvelle version
+- **2 à 4 options max** par écran
+- **Utilise du vrai contenu quand ça compte** — pour un portfolio de photographie, utilise de vraies images (Unsplash). Le contenu factice masque les problèmes de design.
+- **Garde les maquettes simples** — concentre-toi sur la mise en page et la structure, pas sur un design au pixel près
 
-## File Naming
+## Nommage des fichiers
 
-- Use semantic names: `platform.html`, `visual-style.html`, `layout.html`
-- Never reuse filenames — each screen must be a new file
-- For iterations: append version suffix like `layout-v2.html`, `layout-v3.html`
-- Server serves newest file by modification time
+- Utilise des noms sémantiques : `platform.html`, `visual-style.html`, `layout.html`
+- Ne réutilise jamais un nom de fichier — chaque écran doit être un nouveau fichier
+- Pour les itérations : ajoute un suffixe de version comme `layout-v2.html`, `layout-v3.html`
+- Le serveur sert le fichier le plus récent par date de modification
 
-## Cleaning Up
+## Nettoyage
 
 ```bash
 scripts/stop-server.sh $SESSION_DIR
 ```
 
-If the session used `--project-dir`, mockup files persist in `.superpowers/brainstorm/` for later reference. Only `/tmp` sessions get deleted on stop.
+Si la session a utilisé `--project-dir`, les fichiers de maquette persistent dans `.superpowers/brainstorm/` pour référence ultérieure. Seules les sessions `/tmp` sont supprimées à l'arrêt.
 
-## Reference
+## Référence
 
-- Frame template (CSS reference): `scripts/frame-template.html`
-- Helper script (client-side): `scripts/helper.js`
+- Template de cadre (référence CSS) : `scripts/frame-template.html`
+- Script d'aide (côté client) : `scripts/helper.js`

@@ -1,26 +1,26 @@
-# Defense-in-Depth Validation
+# Validation en défense en profondeur
 
-## Overview
+## Vue d'ensemble
 
-When you fix a bug caused by invalid data, adding validation at one place feels sufficient. But that single check can be bypassed by different code paths, refactoring, or mocks.
+Quand tu corriges un bug causé par des données invalides, ajouter une validation à un seul endroit paraît suffisant. Mais cette vérification unique peut être contournée par d'autres chemins de code, un refactoring, ou des mocks.
 
-**Core principle:** Validate at EVERY layer data passes through. Make the bug structurally impossible.
+**Principe central :** valide à CHAQUE couche que les données traversent. Rends le bug structurellement impossible.
 
-## Why Multiple Layers
+## Pourquoi plusieurs couches
 
-Single validation: "We fixed the bug"
-Multiple layers: "We made the bug impossible"
+Validation unique : « On a corrigé le bug »
+Plusieurs couches : « On a rendu le bug impossible »
 
-Different layers catch different cases:
-- Entry validation catches most bugs
-- Business logic catches edge cases
-- Environment guards prevent context-specific dangers
-- Debug logging helps when other layers fail
+Des couches différentes attrapent des cas différents :
+- La validation à l'entrée attrape la plupart des bugs
+- La logique métier attrape les cas limites
+- Les gardes d'environnement empêchent les dangers propres à un contexte
+- La journalisation de debug aide quand les autres couches échouent
 
-## The Four Layers
+## Les quatre couches
 
-### Layer 1: Entry Point Validation
-**Purpose:** Reject obviously invalid input at API boundary
+### Couche 1 : validation au point d'entrée
+**But :** rejeter une entrée manifestement invalide à la frontière de l'API
 
 ```typescript
 function createProject(name: string, workingDirectory: string) {
@@ -37,8 +37,8 @@ function createProject(name: string, workingDirectory: string) {
 }
 ```
 
-### Layer 2: Business Logic Validation
-**Purpose:** Ensure data makes sense for this operation
+### Couche 2 : validation de la logique métier
+**But :** s'assurer que les données ont du sens pour cette opération
 
 ```typescript
 function initializeWorkspace(projectDir: string, sessionId: string) {
@@ -49,8 +49,8 @@ function initializeWorkspace(projectDir: string, sessionId: string) {
 }
 ```
 
-### Layer 3: Environment Guards
-**Purpose:** Prevent dangerous operations in specific contexts
+### Couche 3 : gardes d'environnement
+**But :** empêcher les opérations dangereuses dans des contextes spécifiques
 
 ```typescript
 async function gitInit(directory: string) {
@@ -69,8 +69,8 @@ async function gitInit(directory: string) {
 }
 ```
 
-### Layer 4: Debug Instrumentation
-**Purpose:** Capture context for forensics
+### Couche 4 : instrumentation de debug
+**But :** capturer le contexte pour l'analyse forensique
 
 ```typescript
 async function gitInit(directory: string) {
@@ -84,39 +84,39 @@ async function gitInit(directory: string) {
 }
 ```
 
-## Applying the Pattern
+## Appliquer le pattern
 
-When you find a bug:
+Quand tu trouves un bug :
 
-1. **Trace the data flow** - Where does bad value originate? Where used?
-2. **Map all checkpoints** - List every point data passes through
-3. **Add validation at each layer** - Entry, business, environment, debug
-4. **Test each layer** - Try to bypass layer 1, verify layer 2 catches it
+1. **Trace le flux de données** — d'où vient la mauvaise valeur ? Où est-elle utilisée ?
+2. **Cartographie tous les points de contrôle** — liste chaque point que les données traversent
+3. **Ajoute une validation à chaque couche** — entrée, métier, environnement, debug
+4. **Teste chaque couche** — essaie de contourner la couche 1, vérifie que la couche 2 l'attrape
 
-## Example from Session
+## Exemple issu d'une session
 
-Bug: Empty `projectDir` caused `git init` in source code
+Bug : un `projectDir` vide a causé un `git init` dans le code source
 
-**Data flow:**
-1. Test setup → empty string
+**Flux de données :**
+1. Setup de test → chaîne vide
 2. `Project.create(name, '')`
 3. `WorkspaceManager.createWorkspace('')`
-4. `git init` runs in `process.cwd()`
+4. `git init` s'exécute dans `process.cwd()`
 
-**Four layers added:**
-- Layer 1: `Project.create()` validates not empty/exists/writable
-- Layer 2: `WorkspaceManager` validates projectDir not empty
-- Layer 3: `WorktreeManager` refuses git init outside tmpdir in tests
-- Layer 4: Stack trace logging before git init
+**Quatre couches ajoutées :**
+- Couche 1 : `Project.create()` valide non vide/existe/inscriptible
+- Couche 2 : `WorkspaceManager` valide que projectDir n'est pas vide
+- Couche 3 : `WorktreeManager` refuse git init hors de tmpdir dans les tests
+- Couche 4 : journalisation de la stack trace avant git init
 
-**Result:** All 1847 tests passed, bug impossible to reproduce
+**Résultat :** les 1847 tests passés, bug impossible à reproduire
 
-## Key Insight
+## Constat clé
 
-All four layers were necessary. During testing, each layer caught bugs the others missed:
-- Different code paths bypassed entry validation
-- Mocks bypassed business logic checks
-- Edge cases on different platforms needed environment guards
-- Debug logging identified structural misuse
+Les quatre couches étaient nécessaires. Durant les tests, chaque couche a attrapé des bugs que les autres ont manqués :
+- Des chemins de code différents contournaient la validation d'entrée
+- Des mocks contournaient les vérifications de logique métier
+- Des cas limites sur d'autres plateformes exigeaient des gardes d'environnement
+- La journalisation de debug a identifié un mauvais usage structurel
 
-**Don't stop at one validation point.** Add checks at every layer.
+**Ne t'arrête pas à un seul point de validation.** Ajoute des vérifications à chaque couche.

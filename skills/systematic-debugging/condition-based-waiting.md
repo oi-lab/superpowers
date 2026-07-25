@@ -1,37 +1,26 @@
-# Condition-Based Waiting
+# Attente basée sur une condition
 
-## Overview
+## Vue d'ensemble
 
-Flaky tests often guess at timing with arbitrary delays. This creates race conditions where tests pass on fast machines but fail under load or in CI.
+Les tests instables devinent souvent le timing avec des délais arbitraires. Cela crée des conditions de course où les tests passent sur des machines rapides mais échouent sous charge ou en CI.
 
-**Core principle:** Wait for the actual condition you care about, not a guess about how long it takes.
+**Principe central :** attends la condition réelle qui t'intéresse, pas une supposition sur le temps qu'elle prend.
 
-## When to Use
+## Quand l'utiliser
 
-```dot
-digraph when_to_use {
-    "Test uses setTimeout/sleep?" [shape=diamond];
-    "Testing timing behavior?" [shape=diamond];
-    "Document WHY timeout needed" [shape=box];
-    "Use condition-based waiting" [shape=box];
+Si un test utilise `setTimeout`/`sleep` : quand il teste réellement un comportement de timing, documente POURQUOI le timeout est nécessaire ; sinon, passe à une attente basée sur une condition.
 
-    "Test uses setTimeout/sleep?" -> "Testing timing behavior?" [label="yes"];
-    "Testing timing behavior?" -> "Document WHY timeout needed" [label="yes"];
-    "Testing timing behavior?" -> "Use condition-based waiting" [label="no"];
-}
-```
+**Utilise quand :**
+- Les tests ont des délais arbitraires (`setTimeout`, `sleep`, `time.sleep()`)
+- Les tests sont instables (passent parfois, échouent sous charge)
+- Les tests dépassent le délai quand ils tournent en parallèle
+- Tu attends la fin d'opérations asynchrones
 
-**Use when:**
-- Tests have arbitrary delays (`setTimeout`, `sleep`, `time.sleep()`)
-- Tests are flaky (pass sometimes, fail under load)
-- Tests timeout when run in parallel
-- Waiting for async operations to complete
+**N'utilise pas quand :**
+- Tu testes un vrai comportement de timing (intervalles de debounce, throttle)
+- Documente toujours POURQUOI si tu utilises un timeout arbitraire
 
-**Don't use when:**
-- Testing actual timing behavior (debounce, throttle intervals)
-- Always document WHY if using arbitrary timeout
-
-## Core Pattern
+## Pattern principal
 
 ```typescript
 // ❌ BEFORE: Guessing at timing
@@ -45,19 +34,19 @@ const result = getResult();
 expect(result).toBeDefined();
 ```
 
-## Quick Patterns
+## Patterns rapides
 
-| Scenario | Pattern |
+| Scénario | Pattern |
 |----------|---------|
-| Wait for event | `waitFor(() => events.find(e => e.type === 'DONE'))` |
-| Wait for state | `waitFor(() => machine.state === 'ready')` |
-| Wait for count | `waitFor(() => items.length >= 5)` |
-| Wait for file | `waitFor(() => fs.existsSync(path))` |
-| Complex condition | `waitFor(() => obj.ready && obj.value > 10)` |
+| Attendre un événement | `waitFor(() => events.find(e => e.type === 'DONE'))` |
+| Attendre un état | `waitFor(() => machine.state === 'ready')` |
+| Attendre un décompte | `waitFor(() => items.length >= 5)` |
+| Attendre un fichier | `waitFor(() => fs.existsSync(path))` |
+| Condition complexe | `waitFor(() => obj.ready && obj.value > 10)` |
 
-## Implementation
+## Implémentation
 
-Generic polling function:
+Fonction de polling générique :
 ```typescript
 async function waitFor<T>(
   condition: () => T | undefined | null | false,
@@ -79,20 +68,20 @@ async function waitFor<T>(
 }
 ```
 
-See `condition-based-waiting-example.ts` in this directory for complete implementation with domain-specific helpers (`waitForEvent`, `waitForEventCount`, `waitForEventMatch`) from actual debugging session.
+Voir `condition-based-waiting-example.ts` dans ce répertoire pour une implémentation complète avec des helpers spécifiques au domaine (`waitForEvent`, `waitForEventCount`, `waitForEventMatch`) issus d'une vraie session de débogage.
 
-## Common Mistakes
+## Erreurs courantes
 
-**❌ Polling too fast:** `setTimeout(check, 1)` - wastes CPU
-**✅ Fix:** Poll every 10ms
+**❌ Polling trop rapide :** `setTimeout(check, 1)` — gaspille le CPU
+**✅ Correction :** poll toutes les 10ms
 
-**❌ No timeout:** Loop forever if condition never met
-**✅ Fix:** Always include timeout with clear error
+**❌ Pas de timeout :** boucle infinie si la condition n'est jamais remplie
+**✅ Correction :** inclus toujours un timeout avec une erreur claire
 
-**❌ Stale data:** Cache state before loop
-**✅ Fix:** Call getter inside loop for fresh data
+**❌ Données périmées :** état mis en cache avant la boucle
+**✅ Correction :** appelle le getter dans la boucle pour des données fraîches
 
-## When Arbitrary Timeout IS Correct
+## Quand un timeout arbitraire EST correct
 
 ```typescript
 // Tool ticks every 100ms - need 2 ticks to verify partial output
@@ -101,15 +90,15 @@ await new Promise(r => setTimeout(r, 200));   // Then: wait for timed behavior
 // 200ms = 2 ticks at 100ms intervals - documented and justified
 ```
 
-**Requirements:**
-1. First wait for triggering condition
-2. Based on known timing (not guessing)
-3. Comment explaining WHY
+**Exigences :**
+1. Attends d'abord la condition déclencheuse
+2. Base-toi sur un timing connu (pas une supposition)
+3. Un commentaire expliquant POURQUOI
 
-## Real-World Impact
+## Impact concret
 
-From debugging session (2025-10-03):
-- Fixed 15 flaky tests across 3 files
-- Pass rate: 60% → 100%
-- Execution time: 40% faster
-- No more race conditions
+D'une session de débogage (2025-10-03) :
+- 15 tests instables corrigés dans 3 fichiers
+- Taux de réussite : 60% → 100%
+- Temps d'exécution : 40% plus rapide
+- Plus de conditions de course

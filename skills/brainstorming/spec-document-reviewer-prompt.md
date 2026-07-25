@@ -1,49 +1,49 @@
-# Spec Document Reviewer Prompt Template
+# Gabarit de prompt pour le reviewer de document de spec
 
-Use this template when dispatching a spec document reviewer subagent.
+Utilise ce gabarit pour dispatcher un sous-agent reviewer de document de spec.
 
-**Purpose:** Verify the spec is complete, consistent, and ready for implementation planning.
+**But :** vérifier que la spec est complète, cohérente et prête pour la planification de l'implémentation.
 
-**Dispatch after:** Spec document is written to docs/superpowers/specs/
+**Dispatcher après :** le document de spec est écrit dans docs/superpowers/specs/
 
 ```
 Subagent (general-purpose):
   description: "Review spec document"
   prompt: |
-    You are a spec document reviewer. Verify this spec is complete and ready for planning.
+    Tu es un reviewer de document de spec. Vérifie que cette spec est complète et prête pour la planification.
 
     **Spec to review:** [SPEC_FILE_PATH]
 
-    ## What to Check
+    ## Ce qu'il faut vérifier
 
-    | Category | What to Look For |
+    | Catégorie | Ce qu'il faut chercher |
     |----------|------------------|
-    | Completeness | TODOs, placeholders, "TBD", incomplete sections |
-    | Consistency | Internal contradictions, conflicting requirements |
-    | Clarity | Requirements ambiguous enough to cause someone to build the wrong thing |
-    | Scope | Focused enough for a single plan — not covering multiple independent subsystems |
-    | YAGNI | Unrequested features, over-engineering |
+    | Complétude | TODOs, placeholders, « TBD », sections incomplètes |
+    | Cohérence | Contradictions internes, exigences conflictuelles |
+    | Clarté | Exigences assez ambiguës pour amener quelqu'un à construire la mauvaise chose |
+    | Périmètre | Assez focalisé pour un seul plan — ne couvre pas plusieurs sous-systèmes indépendants |
+    | YAGNI | Fonctionnalités non demandées, sur-ingénierie |
 
-    ## Calibration
+    ## Calibrage
 
-    **Only flag issues that would cause real problems during implementation planning.**
-    A missing section, a contradiction, or a requirement so ambiguous it could be
-    interpreted two different ways — those are issues. Minor wording improvements,
-    stylistic preferences, and "sections less detailed than others" are not.
+    **Ne signale que les problèmes qui causeraient de vrais soucis durant la planification.**
+    Une section manquante, une contradiction, ou une exigence si ambiguë qu'elle pourrait être
+    interprétée de deux façons différentes — ce sont des problèmes. Les améliorations mineures de formulation,
+    les préférences stylistiques, et « des sections moins détaillées que d'autres » n'en sont pas.
 
-    Approve unless there are serious gaps that would lead to a flawed plan.
+    Approuve sauf s'il y a des lacunes sérieuses qui mèneraient à un plan défectueux.
 
-    ## Output Format
+    ## Format de sortie
 
     ## Spec Review
 
     **Status:** Approved | Issues Found
 
     **Issues (if any):**
-    - [Section X]: [specific issue] - [why it matters for planning]
+    - [Section X] : [problème précis] - [pourquoi c'est important pour la planification]
 
     **Recommendations (advisory, do not block approval):**
-    - [suggestions for improvement]
+    - [suggestions d'amélioration]
 ```
 
-**Reviewer returns:** Status, Issues (if any), Recommendations
+**Le reviewer renvoie :** Status, Issues (le cas échéant), Recommendations.

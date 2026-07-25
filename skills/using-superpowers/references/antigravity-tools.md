@@ -1,23 +1,23 @@
-# Antigravity CLI (`agy`) Tool Mapping
+# Correspondance des outils de la CLI Antigravity (`agy`)
 
-Skills speak in actions ("dispatch a subagent", "create a todo", "read a file"). On the Antigravity CLI (`agy`) these resolve to the tools below.
+Les skills parlent en actions (« dispatcher un sous-agent », « créer un todo », « lire un fichier »). Sur la CLI Antigravity (`agy`), elles se résolvent vers les outils ci-dessous.
 
-| Action skills request | Antigravity CLI equivalent |
+| Action demandée par le skill | Équivalent CLI Antigravity |
 |----------------------|----------------------|
-| Dispatch a subagent (`Subagent (general-purpose):` template) | `invoke_subagent` with a built-in `TypeName` — `self` for full-capability work, `research` for read-only |
-| Task tracking ("create a todo", "mark complete") | a **task artifact** — `write_to_file` with `IsArtifact: true` and `ArtifactType: "task"` (see [Task tracking](#task-tracking)). **Not** `manage_task`, which manages background processes. |
+| Dispatcher un sous-agent (gabarit `Subagent (general-purpose):`) | `invoke_subagent` avec un `TypeName` intégré — `self` pour du travail à pleines capacités, `research` pour de la lecture seule |
+| Suivi de tâches (« créer un todo », « marquer terminé ») | un **artefact task** — `write_to_file` avec `IsArtifact: true` et `ArtifactType: "task"` (voir [Suivi de tâches](#suivi-de-tâches)). **Pas** `manage_task`, qui gère les processus en arrière-plan. |
 
-## Task tracking
+## Suivi de tâches
 
-Antigravity has **no todo tool** (`manage_task` manages background
-processes — `list`/`kill`/`status`/`send_input` — it is *not* a checklist). When a
-skill says to create a todo list or track tasks, maintain a **task artifact**: a
-markdown checklist saved with `write_to_file` (`IsArtifact: true`,
-`ArtifactMetadata.ArtifactType: "task"`), edited with `replace_file_content` /
-`multi_replace_file_content` as you go.
+Antigravity n'a **aucun outil de todo** (`manage_task` gère les processus en
+arrière-plan — `list`/`kill`/`status`/`send_input` — ce n'est *pas* une checklist). Quand un
+skill dit de créer une liste de todos ou de suivre des tâches, maintiens un **artefact task** : une
+checklist markdown sauvegardée avec `write_to_file` (`IsArtifact: true`,
+`ArtifactMetadata.ArtifactType: "task"`), éditée avec `replace_file_content` /
+`multi_replace_file_content` au fur et à mesure.
 
-At the start of any multi-step task, create the task artifact listing every step of
-your plan. As you complete each step, edit the artifact to mark it done (`- [x]`).
-If the plan changes, update the checklist. Keep it current — it is your source of
-truth for what remains; once the conversation gets long, re-read it before starting
-each step.
+Au début de toute tâche multi-étapes, crée l'artefact task listant chaque étape de
+ton plan. À mesure que tu termines une étape, édite l'artefact pour la marquer faite (`- [x]`).
+Si le plan change, mets la checklist à jour. Garde-la à jour — c'est ta source de
+vérité de ce qui reste ; une fois la conversation longue, relis-la avant de commencer
+chaque étape.

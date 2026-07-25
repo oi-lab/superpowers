@@ -1,33 +1,33 @@
-# Skill authoring best practices
+# Bonnes pratiques de rédaction de skills
 
-> Learn how to write effective Skills that agents can discover and use successfully.
+> Apprends à écrire des skills efficaces que les agents peuvent découvrir et utiliser avec succès.
 
-Good Skills are concise, well-structured, and tested with real usage. This guide provides practical authoring decisions to help you write Skills that agents can discover and use effectively.
+Les bons skills sont concis, bien structurés et testés en usage réel. Ce guide fournit des décisions pratiques de rédaction pour t'aider à écrire des skills que les agents découvrent et utilisent efficacement.
 
-For conceptual background on how Skills work, see the [Skills overview](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview).
+Pour le contexte conceptuel sur le fonctionnement des skills, voir la [présentation des Skills](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview).
 
-## Core principles
+## Principes fondamentaux
 
-### Concise is key
+### La concision est essentielle
 
-The [context window](https://platform.claude.com/docs/en/build-with-claude/context-windows) is a public good. Your Skill shares the context window with everything else your agent needs to know, including:
+La [fenêtre de contexte](https://platform.claude.com/docs/en/build-with-claude/context-windows) est un bien commun. Ton skill partage la fenêtre de contexte avec tout ce que ton agent doit savoir, notamment :
 
-* The system prompt
-* Conversation history
-* Other Skills' metadata
-* Your actual request
+* Le prompt système
+* L'historique de conversation
+* Les métadonnées des autres skills
+* Ta requête réelle
 
-Not every token in your Skill has an immediate cost. At startup, only the metadata (name and description) from all Skills is pre-loaded. Agents read SKILL.md only when the Skill becomes relevant, and read additional files only as needed. However, being concise in SKILL.md still matters: once an agent loads it, every token competes with conversation history and other context.
+Tous les tokens de ton skill n'ont pas un coût immédiat. Au démarrage, seules les métadonnées (nom et description) de tous les skills sont préchargées. Les agents lisent SKILL.md uniquement lorsque le skill devient pertinent, et ne lisent les fichiers supplémentaires qu'au besoin. Néanmoins, être concis dans SKILL.md reste important : une fois chargé, chaque token entre en concurrence avec l'historique de conversation et le reste du contexte.
 
-**Default assumption**: Agents are already very smart
+**Hypothèse par défaut** : les agents sont déjà très intelligents.
 
-Only add context agents don't already have. Challenge each piece of information:
+N'ajoute que le contexte que les agents n'ont pas déjà. Remets en question chaque information :
 
-* "Does the agent really need this explanation?"
-* "Can I assume the agent knows this?"
-* "Does this paragraph justify its token cost?"
+* « L'agent a-t-il vraiment besoin de cette explication ? »
+* « Puis-je supposer que l'agent sait déjà cela ? »
+* « Ce paragraphe justifie-t-il son coût en tokens ? »
 
-**Good example: Concise** (approximately 50 tokens):
+**Bon exemple : concis** (environ 50 tokens) :
 
 ````markdown  theme={null}
 ## Extract PDF text
@@ -42,7 +42,7 @@ with pdfplumber.open("file.pdf") as pdf:
 ```
 ````
 
-**Bad example: Too verbose** (approximately 150 tokens):
+**Mauvais exemple : trop verbeux** (environ 150 tokens) :
 
 ```markdown  theme={null}
 ## Extract PDF text
@@ -54,21 +54,21 @@ recommend pdfplumber because it's easy to use and handles most cases well.
 First, you'll need to install it using pip. Then you can use the code below...
 ```
 
-The concise version assumes the agent knows what PDFs are and how libraries work.
+La version concise suppose que l'agent sait ce qu'est un PDF et comment fonctionnent les bibliothèques.
 
-### Set appropriate degrees of freedom
+### Ajuste le degré de liberté
 
-Match the level of specificity to the task's fragility and variability.
+Adapte le niveau de précision à la fragilité et à la variabilité de la tâche.
 
-**High freedom** (text-based instructions):
+**Liberté élevée** (instructions textuelles) :
 
-Use when:
+À utiliser quand :
 
-* Multiple approaches are valid
-* Decisions depend on context
-* Heuristics guide the approach
+* Plusieurs approches sont valables
+* Les décisions dépendent du contexte
+* Des heuristiques guident l'approche
 
-Example:
+Exemple :
 
 ```markdown  theme={null}
 ## Code review process
@@ -79,15 +79,15 @@ Example:
 4. Verify adherence to project conventions
 ```
 
-**Medium freedom** (pseudocode or scripts with parameters):
+**Liberté moyenne** (pseudocode ou scripts paramétrés) :
 
-Use when:
+À utiliser quand :
 
-* A preferred pattern exists
-* Some variation is acceptable
-* Configuration affects behavior
+* Un schéma privilégié existe
+* Une certaine variation est acceptable
+* La configuration influe sur le comportement
 
-Example:
+Exemple :
 
 ````markdown  theme={null}
 ## Generate report
@@ -102,15 +102,15 @@ def generate_report(data, format="markdown", include_charts=True):
 ```
 ````
 
-**Low freedom** (specific scripts, few or no parameters):
+**Liberté faible** (scripts précis, peu ou pas de paramètres) :
 
-Use when:
+À utiliser quand :
 
-* Operations are fragile and error-prone
-* Consistency is critical
-* A specific sequence must be followed
+* Les opérations sont fragiles et sujettes aux erreurs
+* La cohérence est critique
+* Une séquence précise doit être suivie
 
-Example:
+Exemple :
 
 ````markdown  theme={null}
 ## Database migration
@@ -124,101 +124,101 @@ python scripts/migrate.py --verify --backup
 Do not modify the command or add additional flags.
 ````
 
-**Analogy**: Think of the agent as a robot exploring a path:
+**Analogie** : imagine l'agent comme un robot qui explore un chemin :
 
-* **Narrow bridge with cliffs on both sides**: There's only one safe way forward. Provide specific guardrails and exact instructions (low freedom). Example: database migrations that must run in exact sequence.
-* **Open field with no hazards**: Many paths lead to success. Give general direction and trust the agent to find the best route (high freedom). Example: code reviews where context determines the best approach.
+* **Pont étroit avec un précipice de chaque côté** : il n'y a qu'une seule voie sûre. Fournis des garde-fous précis et des instructions exactes (liberté faible). Exemple : des migrations de base de données qui doivent s'exécuter dans un ordre exact.
+* **Champ ouvert sans danger** : de nombreux chemins mènent au succès. Donne une direction générale et fais confiance à l'agent pour trouver la meilleure route (liberté élevée). Exemple : des revues de code où le contexte détermine la meilleure approche.
 
-### Test with all models you plan to use
+### Teste avec tous les modèles prévus
 
-Skills act as additions to models, so effectiveness depends on the underlying model. Test your Skill with all the models you plan to use it with.
+Les skills agissent comme des ajouts aux modèles, donc leur efficacité dépend du modèle sous-jacent. Teste ton skill avec tous les modèles avec lesquels tu comptes l'utiliser.
 
-**Testing considerations by model**:
+**Points de test selon le modèle** :
 
-* **Claude Haiku** (fast, economical): Does the Skill provide enough guidance?
-* **Claude Sonnet** (balanced): Is the Skill clear and efficient?
-* **Claude Opus** (powerful reasoning): Does the Skill avoid over-explaining?
+* **Claude Haiku** (rapide, économique) : le skill fournit-il assez d'indications ?
+* **Claude Sonnet** (équilibré) : le skill est-il clair et efficace ?
+* **Claude Opus** (raisonnement puissant) : le skill évite-t-il de trop expliquer ?
 
-What works perfectly for Opus might need more detail for Haiku. If you plan to use your Skill across multiple models, aim for instructions that work well with all of them.
+Ce qui fonctionne parfaitement pour Opus peut nécessiter plus de détails pour Haiku. Si tu comptes utiliser ton skill sur plusieurs modèles, vise des instructions qui fonctionnent bien avec tous.
 
-## Skill structure
+## Structure d'un skill
 
 <Note>
-  **YAML Frontmatter**: The SKILL.md frontmatter requires two fields:
+  **Frontmatter YAML** : le frontmatter de SKILL.md exige deux champs :
 
-  * `name` - Human-readable name of the Skill (64 characters maximum)
-  * `description` - One-line description of what the Skill does and when to use it (1024 characters maximum)
+  * `name` - Nom lisible du skill (64 caractères maximum)
+  * `description` - Description en une ligne de ce que fait le skill et quand l'utiliser (1024 caractères maximum)
 
-  For complete Skill structure details, see the [Skills overview](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview#skill-structure).
+  Pour tous les détails de structure d'un skill, voir la [présentation des Skills](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview#skill-structure).
 </Note>
 
-### Naming conventions
+### Conventions de nommage
 
-Use consistent naming patterns to make Skills easier to reference and discuss. We recommend using **gerund form** (verb + -ing) for Skill names, as this clearly describes the activity or capability the Skill provides.
+Utilise des schémas de nommage cohérents pour faciliter la référence et la discussion. Nous recommandons la **forme en -ing (gérondif)** pour les noms de skills, car elle décrit clairement l'activité ou la capacité fournie.
 
-**Good naming examples (gerund form)**:
+**Bons exemples de nommage (gérondif)** :
 
-* "Processing PDFs"
-* "Analyzing spreadsheets"
-* "Managing databases"
-* "Testing code"
-* "Writing documentation"
+* « Processing PDFs »
+* « Analyzing spreadsheets »
+* « Managing databases »
+* « Testing code »
+* « Writing documentation »
 
-**Acceptable alternatives**:
+**Alternatives acceptables** :
 
-* Noun phrases: "PDF Processing", "Spreadsheet Analysis"
-* Action-oriented: "Process PDFs", "Analyze Spreadsheets"
+* Groupes nominaux : « PDF Processing », « Spreadsheet Analysis »
+* Orientés action : « Process PDFs », « Analyze Spreadsheets »
 
-**Avoid**:
+**À éviter** :
 
-* Vague names: "Helper", "Utils", "Tools"
-* Overly generic: "Documents", "Data", "Files"
-* Inconsistent patterns within your skill collection
+* Noms vagues : « Helper », « Utils », « Tools »
+* Trop génériques : « Documents », « Data », « Files »
+* Schémas incohérents au sein de ta collection de skills
 
-Consistent naming makes it easier to:
+Un nommage cohérent facilite :
 
-* Reference Skills in documentation and conversations
-* Understand what a Skill does at a glance
-* Organize and search through multiple Skills
-* Maintain a professional, cohesive skill library
+* La référence aux skills dans la documentation et les conversations
+* La compréhension immédiate de ce que fait un skill
+* L'organisation et la recherche parmi plusieurs skills
+* Le maintien d'une bibliothèque de skills professionnelle et cohérente
 
-### Writing effective descriptions
+### Rédiger des descriptions efficaces
 
-The `description` field enables Skill discovery and should include both what the Skill does and when to use it.
+Le champ `description` permet la découverte du skill et doit indiquer à la fois ce que fait le skill et quand l'utiliser.
 
 <Warning>
-  **Always write in third person**. The description is injected into the system prompt, and inconsistent point-of-view can cause discovery problems.
+  **Écris toujours à la troisième personne.** La description est injectée dans le prompt système, et un point de vue incohérent peut causer des problèmes de découverte.
 
-  * **Good:** "Processes Excel files and generates reports"
-  * **Avoid:** "I can help you process Excel files"
-  * **Avoid:** "You can use this to process Excel files"
+  * **Bon :** "Processes Excel files and generates reports"
+  * **À éviter :** "I can help you process Excel files"
+  * **À éviter :** "You can use this to process Excel files"
 </Warning>
 
-**Be specific and include key terms**. Include both what the Skill does and specific triggers/contexts for when to use it.
+**Sois précis et inclus les termes-clés.** Indique à la fois ce que fait le skill et les déclencheurs/contextes précis d'utilisation.
 
-Each Skill has exactly one description field. The description is critical for skill selection: agents use it to choose the right Skill from potentially 100+ available Skills. Your description must provide enough detail for an agent to know when to select this Skill, while the rest of SKILL.md provides the implementation details.
+Chaque skill a exactement un champ description. La description est critique pour la sélection du skill : les agents s'en servent pour choisir le bon skill parmi potentiellement plus de 100 skills disponibles. Ta description doit donner assez de détails pour qu'un agent sache quand sélectionner ce skill, tandis que le reste de SKILL.md fournit les détails de mise en œuvre.
 
-Effective examples:
+Exemples efficaces :
 
-**PDF Processing skill:**
+**Skill PDF Processing :**
 
 ```yaml  theme={null}
 description: Extract text and tables from PDF files, fill forms, merge documents. Use when working with PDF files or when the user mentions PDFs, forms, or document extraction.
 ```
 
-**Excel Analysis skill:**
+**Skill Excel Analysis :**
 
 ```yaml  theme={null}
 description: Analyze Excel spreadsheets, create pivot tables, generate charts. Use when analyzing Excel files, spreadsheets, tabular data, or .xlsx files.
 ```
 
-**Git Commit Helper skill:**
+**Skill Git Commit Helper :**
 
 ```yaml  theme={null}
 description: Generate descriptive commit messages by analyzing git diffs. Use when the user asks for help writing commit messages or reviewing staged changes.
 ```
 
-Avoid vague descriptions like these:
+Évite les descriptions vagues comme celles-ci :
 
 ```yaml  theme={null}
 description: Helps with documents
@@ -232,27 +232,27 @@ description: Processes data
 description: Does stuff with files
 ```
 
-### Progressive disclosure patterns
+### Schémas de divulgation progressive
 
-SKILL.md serves as an overview that points agents to detailed materials as needed, like a table of contents in an onboarding guide. For an explanation of how progressive disclosure works, see [How Skills work](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview#how-skills-work) in the overview.
+SKILL.md sert de vue d'ensemble qui oriente les agents vers des ressources détaillées au besoin, comme une table des matières dans un guide d'accueil. Pour une explication du fonctionnement de la divulgation progressive, voir [How Skills work](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview#how-skills-work) dans la présentation.
 
-**Practical guidance:**
+**Conseils pratiques :**
 
-* Keep SKILL.md body under 500 lines for optimal performance
-* Split content into separate files when approaching this limit
-* Use the patterns below to organize instructions, code, and resources effectively
+* Garde le corps de SKILL.md sous 500 lignes pour des performances optimales
+* Répartis le contenu dans des fichiers séparés à l'approche de cette limite
+* Utilise les schémas ci-dessous pour organiser efficacement instructions, code et ressources
 
-#### Visual overview: From simple to complex
+#### Vue d'ensemble visuelle : du simple au complexe
 
-A basic Skill starts with just a SKILL.md file containing metadata and instructions:
+Un skill de base démarre avec un simple fichier SKILL.md contenant métadonnées et instructions :
 
 <img src="https://mintcdn.com/anthropic-claude-docs/4Bny2bjzuGBK7o00/images/agent-skills-simple-file.png?fit=max&auto=format&n=4Bny2bjzuGBK7o00&q=85&s=87782ff239b297d9a9e8e1b72ed72db9" alt="Simple SKILL.md file showing YAML frontmatter and markdown body" data-og-width="2048" width="2048" data-og-height="1153" height="1153" data-path="images/agent-skills-simple-file.png" data-optimize="true" data-opv="3" srcset="https://mintcdn.com/anthropic-claude-docs/4Bny2bjzuGBK7o00/images/agent-skills-simple-file.png?w=280&fit=max&auto=format&n=4Bny2bjzuGBK7o00&q=85&s=c61cc33b6f5855809907f7fda94cd80e 280w, https://mintcdn.com/anthropic-claude-docs/4Bny2bjzuGBK7o00/images/agent-skills-simple-file.png?w=560&fit=max&auto=format&n=4Bny2bjzuGBK7o00&q=85&s=90d2c0c1c76b36e8d485f49e0810dbfd 560w, https://mintcdn.com/anthropic-claude-docs/4Bny2bjzuGBK7o00/images/agent-skills-simple-file.png?w=840&fit=max&auto=format&n=4Bny2bjzuGBK7o00&q=85&s=ad17d231ac7b0bea7e5b4d58fb4aeabb 840w, https://mintcdn.com/anthropic-claude-docs/4Bny2bjzuGBK7o00/images/agent-skills-simple-file.png?w=1100&fit=max&auto=format&n=4Bny2bjzuGBK7o00&q=85&s=f5d0a7a3c668435bb0aee9a3a8f8c329 1100w, https://mintcdn.com/anthropic-claude-docs/4Bny2bjzuGBK7o00/images/agent-skills-simple-file.png?w=1650&fit=max&auto=format&n=4Bny2bjzuGBK7o00&q=85&s=0e927c1af9de5799cfe557d12249f6e6 1650w, https://mintcdn.com/anthropic-claude-docs/4Bny2bjzuGBK7o00/images/agent-skills-simple-file.png?w=2500&fit=max&auto=format&n=4Bny2bjzuGBK7o00&q=85&s=46bbb1a51dd4c8202a470ac8c80a893d 2500w" />
 
-As your Skill grows, you can bundle additional content that agents load only when needed:
+À mesure que ton skill grandit, tu peux joindre du contenu supplémentaire que les agents ne chargent qu'au besoin :
 
 <img src="https://mintcdn.com/anthropic-claude-docs/4Bny2bjzuGBK7o00/images/agent-skills-bundling-content.png?fit=max&auto=format&n=4Bny2bjzuGBK7o00&q=85&s=a5e0aa41e3d53985a7e3e43668a33ea3" alt="Bundling additional reference files like reference.md and forms.md." data-og-width="2048" width="2048" data-og-height="1327" height="1327" data-path="images/agent-skills-bundling-content.png" data-optimize="true" data-opv="3" srcset="https://mintcdn.com/anthropic-claude-docs/4Bny2bjzuGBK7o00/images/agent-skills-bundling-content.png?w=280&fit=max&auto=format&n=4Bny2bjzuGBK7o00&q=85&s=f8a0e73783e99b4a643d79eac86b70a2 280w, https://mintcdn.com/anthropic-claude-docs/4Bny2bjzuGBK7o00/images/agent-skills-bundling-content.png?w=560&fit=max&auto=format&n=4Bny2bjzuGBK7o00&q=85&s=dc510a2a9d3f14359416b706f067904a 560w, https://mintcdn.com/anthropic-claude-docs/4Bny2bjzuGBK7o00/images/agent-skills-bundling-content.png?w=840&fit=max&auto=format&n=4Bny2bjzuGBK7o00&q=85&s=82cd6286c966303f7dd914c28170e385 840w, https://mintcdn.com/anthropic-claude-docs/4Bny2bjzuGBK7o00/images/agent-skills-bundling-content.png?w=1100&fit=max&auto=format&n=4Bny2bjzuGBK7o00&q=85&s=56f3be36c77e4fe4b523df209a6824c6 1100w, https://mintcdn.com/anthropic-claude-docs/4Bny2bjzuGBK7o00/images/agent-skills-bundling-content.png?w=1650&fit=max&auto=format&n=4Bny2bjzuGBK7o00&q=85&s=d22b5161b2075656417d56f41a74f3dd 1650w, https://mintcdn.com/anthropic-claude-docs/4Bny2bjzuGBK7o00/images/agent-skills-bundling-content.png?w=2500&fit=max&auto=format&n=4Bny2bjzuGBK7o00&q=85&s=3dd4bdd6850ffcc96c6c45fcb0acd6eb 2500w" />
 
-The complete Skill directory structure might look like this:
+La structure complète du répertoire d'un skill peut ressembler à ceci :
 
 ```
 pdf/
@@ -266,7 +266,7 @@ pdf/
     └── validate.py       # Validation script
 ```
 
-#### Pattern 1: High-level guide with references
+#### Schéma 1 : guide de haut niveau avec références
 
 ````markdown  theme={null}
 ---
@@ -292,11 +292,11 @@ with pdfplumber.open("file.pdf") as pdf:
 **Examples**: See [EXAMPLES.md](EXAMPLES.md) for common patterns
 ````
 
-Agents load FORMS.md, REFERENCE.md, or EXAMPLES.md only when needed.
+Les agents chargent FORMS.md, REFERENCE.md ou EXAMPLES.md uniquement au besoin.
 
-#### Pattern 2: Domain-specific organization
+#### Schéma 2 : organisation par domaine
 
-For Skills with multiple domains, organize content by domain to avoid loading irrelevant context. When a user asks about sales metrics, the agent only needs to read sales-related schemas, not finance or marketing data. This keeps token usage low and context focused.
+Pour les skills couvrant plusieurs domaines, organise le contenu par domaine pour éviter de charger du contexte non pertinent. Quand un utilisateur pose une question sur les métriques de vente, l'agent n'a besoin que des schémas liés aux ventes, pas des données finance ou marketing. Cela maintient une faible consommation de tokens et un contexte ciblé.
 
 ```
 bigquery-skill/
@@ -329,9 +329,9 @@ grep -i "api usage" reference/product.md
 ```
 ````
 
-#### Pattern 3: Conditional details
+#### Schéma 3 : détails conditionnels
 
-Show basic content, link to advanced content:
+Montre le contenu de base, lie vers le contenu avancé :
 
 ```markdown  theme={null}
 # DOCX Processing
@@ -348,15 +348,15 @@ For simple edits, modify the XML directly.
 **For OOXML details**: See [OOXML.md](OOXML.md)
 ```
 
-Agents read REDLINING.md or OOXML.md only when the user needs those features.
+Les agents lisent REDLINING.md ou OOXML.md uniquement quand l'utilisateur a besoin de ces fonctionnalités.
 
-### Avoid deeply nested references
+### Évite les références profondément imbriquées
 
-Agents may partially read files when they're referenced from other referenced files. When encountering nested references, an agent might use commands like `head -100` to preview content rather than reading entire files, resulting in incomplete information.
+Les agents peuvent lire les fichiers partiellement lorsqu'ils sont référencés depuis d'autres fichiers référencés. Face à des références imbriquées, un agent peut utiliser des commandes comme `head -100` pour prévisualiser plutôt que de lire les fichiers en entier, ce qui donne des informations incomplètes.
 
-**Keep references one level deep from SKILL.md**. All reference files should link directly from SKILL.md to ensure agents read complete files when needed.
+**Garde les références à un seul niveau de profondeur depuis SKILL.md.** Tous les fichiers de référence doivent être liés directement depuis SKILL.md pour garantir que les agents lisent les fichiers complets au besoin.
 
-**Bad example: Too deep**:
+**Mauvais exemple : trop profond** :
 
 ```markdown  theme={null}
 # SKILL.md
@@ -369,7 +369,7 @@ See [details.md](details.md)...
 Here's the actual information...
 ```
 
-**Good example: One level deep**:
+**Bon exemple : un seul niveau de profondeur** :
 
 ```markdown  theme={null}
 # SKILL.md
@@ -380,11 +380,11 @@ Here's the actual information...
 **Examples**: See [examples.md](examples.md)
 ```
 
-### Structure longer reference files with table of contents
+### Structure les longs fichiers de référence avec une table des matières
 
-For reference files longer than 100 lines, include a table of contents at the top. This ensures agents can see the full scope of available information even when previewing with partial reads.
+Pour les fichiers de référence de plus de 100 lignes, place une table des matières en haut. Ainsi, les agents voient toute l'étendue des informations disponibles même en prévisualisant par lectures partielles.
 
-**Example**:
+**Exemple** :
 
 ```markdown  theme={null}
 # API Reference
@@ -403,17 +403,17 @@ For reference files longer than 100 lines, include a table of contents at the to
 ...
 ```
 
-Agents can then read the complete file or jump to specific sections as needed.
+Les agents peuvent alors lire le fichier complet ou aller directement à une section précise.
 
-For details on how this filesystem-based architecture enables progressive disclosure, see the [Runtime environment](#runtime-environment) section in the Advanced section below.
+Pour savoir comment cette architecture basée sur le système de fichiers permet la divulgation progressive, voir la section [Runtime environment](#runtime-environment) dans la partie Avancé ci-dessous.
 
-## Workflows and feedback loops
+## Workflows et boucles de rétroaction
 
-### Use workflows for complex tasks
+### Utilise des workflows pour les tâches complexes
 
-Break complex operations into clear, sequential steps. For particularly complex workflows, provide a checklist that the agent can copy into its response and check off as it progresses.
+Découpe les opérations complexes en étapes claires et séquentielles. Pour les workflows particulièrement complexes, fournis une checklist que l'agent peut copier dans sa réponse et cocher au fur et à mesure.
 
-**Example 1: Research synthesis workflow** (for Skills without code):
+**Exemple 1 : workflow de synthèse de recherche** (pour les skills sans code) :
 
 ````markdown  theme={null}
 ## Research synthesis workflow
@@ -453,9 +453,9 @@ Organize findings by theme. Include:
 Check that every claim references the correct source document. If citations are incomplete, return to Step 3.
 ````
 
-This example shows how workflows apply to analysis tasks that don't require code. The checklist pattern works for any complex, multi-step process.
+Cet exemple montre comment les workflows s'appliquent à des tâches d'analyse ne nécessitant pas de code. Le schéma de checklist fonctionne pour tout processus complexe à plusieurs étapes.
 
-**Example 2: PDF form filling workflow** (for Skills with code):
+**Exemple 2 : workflow de remplissage de formulaire PDF** (pour les skills avec code) :
 
 ````markdown  theme={null}
 ## PDF form filling workflow
@@ -498,15 +498,15 @@ Run: `python scripts/verify_output.py output.pdf`
 If verification fails, return to Step 2.
 ````
 
-Clear steps prevent agents from skipping critical validation. The checklist helps both you and the agent track progress through multi-step workflows.
+Des étapes claires empêchent les agents de sauter des validations critiques. La checklist t'aide, toi et l'agent, à suivre la progression dans les workflows à plusieurs étapes.
 
-### Implement feedback loops
+### Mets en place des boucles de rétroaction
 
-**Common pattern**: Run validator → fix errors → repeat
+**Schéma courant** : exécuter le validateur → corriger les erreurs → répéter
 
-This pattern greatly improves output quality.
+Ce schéma améliore grandement la qualité des résultats.
 
-**Example 1: Style guide compliance** (for Skills without code):
+**Exemple 1 : conformité à un guide de style** (pour les skills sans code) :
 
 ```markdown  theme={null}
 ## Content review process
@@ -524,9 +524,9 @@ This pattern greatly improves output quality.
 5. Finalize and save the document
 ```
 
-This shows the validation loop pattern using reference documents instead of scripts. The "validator" is STYLE\_GUIDE.md, and the agent performs the check by reading and comparing.
+Cela illustre le schéma de boucle de validation en utilisant des documents de référence au lieu de scripts. Le « validateur » est STYLE\_GUIDE.md, et l'agent effectue la vérification en lisant et comparant.
 
-**Example 2: Document editing process** (for Skills with code):
+**Exemple 2 : processus d'édition de document** (pour les skills avec code) :
 
 ```markdown  theme={null}
 ## Document editing process
@@ -542,22 +542,22 @@ This shows the validation loop pattern using reference documents instead of scri
 6. Test the output document
 ```
 
-The validation loop catches errors early.
+La boucle de validation détecte les erreurs tôt.
 
-## Content guidelines
+## Consignes de contenu
 
-### Avoid time-sensitive information
+### Évite les informations sensibles au temps
 
-Don't include information that will become outdated:
+N'inclus pas d'informations qui deviendront obsolètes :
 
-**Bad example: Time-sensitive** (will become wrong):
+**Mauvais exemple : sensible au temps** (deviendra faux) :
 
 ```markdown  theme={null}
 If you're doing this before August 2025, use the old API.
 After August 2025, use the new API.
 ```
 
-**Good example** (use "old patterns" section):
+**Bon exemple** (utilise une section « old patterns ») :
 
 ```markdown  theme={null}
 ## Current method
@@ -575,33 +575,33 @@ This endpoint is no longer supported.
 </details>
 ```
 
-The old patterns section provides historical context without cluttering the main content.
+La section « old patterns » fournit un contexte historique sans encombrer le contenu principal.
 
-### Use consistent terminology
+### Utilise une terminologie cohérente
 
-Choose one term and use it throughout the Skill:
+Choisis un terme et utilise-le tout au long du skill :
 
-**Good - Consistent**:
+**Bon — cohérent** :
 
-* Always "API endpoint"
-* Always "field"
-* Always "extract"
+* Toujours « API endpoint »
+* Toujours « field »
+* Toujours « extract »
 
-**Bad - Inconsistent**:
+**Mauvais — incohérent** :
 
-* Mix "API endpoint", "URL", "API route", "path"
-* Mix "field", "box", "element", "control"
-* Mix "extract", "pull", "get", "retrieve"
+* Mélange « API endpoint », « URL », « API route », « path »
+* Mélange « field », « box », « element », « control »
+* Mélange « extract », « pull », « get », « retrieve »
 
-Consistency helps agents understand and follow instructions.
+La cohérence aide les agents à comprendre et suivre les instructions.
 
-## Common patterns
+## Schémas courants
 
-### Template pattern
+### Schéma de gabarit (template)
 
-Provide templates for output format. Match the level of strictness to your needs.
+Fournis des gabarits pour le format de sortie. Adapte le niveau de rigueur à tes besoins.
 
-**For strict requirements** (like API responses or data formats):
+**Pour des exigences strictes** (comme des réponses d'API ou des formats de données) :
 
 ````markdown  theme={null}
 ## Report structure
@@ -625,7 +625,7 @@ ALWAYS use this exact template structure:
 ```
 ````
 
-**For flexible guidance** (when adaptation is useful):
+**Pour un guidage souple** (quand l'adaptation est utile) :
 
 ````markdown  theme={null}
 ## Report structure
@@ -648,9 +648,9 @@ Here is a sensible default format, but use your best judgment based on the analy
 Adjust sections as needed for the specific analysis type.
 ````
 
-### Examples pattern
+### Schéma d'exemples
 
-For Skills where output quality depends on seeing examples, provide input/output pairs just like in regular prompting:
+Pour les skills dont la qualité de sortie dépend de la présence d'exemples, fournis des paires entrée/sortie, exactement comme dans un prompting classique :
 
 ````markdown  theme={null}
 ## Commit message format
@@ -688,11 +688,11 @@ chore: update dependencies and refactor error handling
 Follow this style: type(scope): brief description, then detailed explanation.
 ````
 
-Examples help agents understand the desired style and level of detail more clearly than descriptions alone.
+Les exemples aident les agents à saisir le style et le niveau de détail souhaités plus clairement que des descriptions seules.
 
-### Conditional workflow pattern
+### Schéma de workflow conditionnel
 
-Guide agents through decision points:
+Guide les agents à travers les points de décision :
 
 ```markdown  theme={null}
 ## Document modification workflow
@@ -715,26 +715,26 @@ Guide agents through decision points:
 ```
 
 <Tip>
-  If workflows become large or complicated with many steps, consider pushing them into separate files and tell the agent to read the appropriate file based on the task at hand.
+  Si les workflows deviennent volumineux ou compliqués avec de nombreuses étapes, envisage de les déplacer dans des fichiers séparés et indique à l'agent de lire le fichier approprié selon la tâche.
 </Tip>
 
-## Evaluation and iteration
+## Évaluation et itération
 
-### Build evaluations first
+### Construis d'abord les évaluations
 
-**Create evaluations BEFORE writing extensive documentation.** This ensures your Skill solves real problems rather than documenting imagined ones.
+**Crée les évaluations AVANT de rédiger une documentation extensive.** Cela garantit que ton skill résout de vrais problèmes plutôt que d'en documenter d'imaginaires.
 
-**Evaluation-driven development:**
+**Développement piloté par l'évaluation :**
 
-1. **Identify gaps**: Run your agent on representative tasks without a Skill. Document specific failures or missing context
-2. **Create evaluations**: Build three scenarios that test these gaps
-3. **Establish baseline**: Measure the agent's performance without the Skill
-4. **Write minimal instructions**: Create just enough content to address the gaps and pass evaluations
-5. **Iterate**: Execute evaluations, compare against baseline, and refine
+1. **Identifier les lacunes** : lance ton agent sur des tâches représentatives sans skill. Documente les échecs précis ou le contexte manquant
+2. **Créer les évaluations** : construis trois scénarios testant ces lacunes
+3. **Établir une référence** : mesure la performance de l'agent sans le skill
+4. **Écrire des instructions minimales** : crée juste assez de contenu pour combler les lacunes et passer les évaluations
+5. **Itérer** : exécute les évaluations, compare à la référence et affine
 
-This approach ensures you're solving actual problems rather than anticipating requirements that may never materialize.
+Cette approche garantit que tu résous de vrais problèmes plutôt que d'anticiper des besoins qui ne se concrétiseront peut-être jamais.
 
-**Evaluation structure**:
+**Structure d'une évaluation** :
 
 ```json  theme={null}
 {
@@ -750,90 +750,90 @@ This approach ensures you're solving actual problems rather than anticipating re
 ```
 
 <Note>
-  This example demonstrates a data-driven evaluation with a simple testing rubric. We do not currently provide a built-in way to run these evaluations. Users can create their own evaluation system. Evaluations are your source of truth for measuring Skill effectiveness.
+  Cet exemple montre une évaluation pilotée par les données avec une grille de test simple. Nous ne fournissons pas actuellement de moyen intégré d'exécuter ces évaluations. Les utilisateurs peuvent créer leur propre système d'évaluation. Les évaluations sont ta source de vérité pour mesurer l'efficacité d'un skill.
 </Note>
 
-### Develop Skills iteratively with the agent
+### Développe les skills de façon itérative avec l'agent
 
-The most effective Skill development process involves the agent itself. Work with one instance ("Agent A") to create a Skill that will be used by other instances ("Agent B"). Agent A helps you design and refine instructions, while Agent B tests them in real tasks. This works because the underlying models understand both how to write effective agent instructions and what information agents need.
+Le processus de développement de skills le plus efficace fait intervenir l'agent lui-même. Travaille avec une instance (« Agent A ») pour créer un skill qui sera utilisé par d'autres instances (« Agent B »). L'Agent A t'aide à concevoir et affiner les instructions, tandis que l'Agent B les teste dans des tâches réelles. Cela fonctionne car les modèles sous-jacents comprennent à la fois comment écrire des instructions d'agent efficaces et de quelles informations les agents ont besoin.
 
-**Creating a new Skill:**
+**Créer un nouveau skill :**
 
-1. **Complete a task without a Skill**: Work through a problem with Agent A using normal prompting. As you work, you'll naturally provide context, explain preferences, and share procedural knowledge. Notice what information you repeatedly provide.
+1. **Réaliser une tâche sans skill** : résous un problème avec l'Agent A par prompting classique. En travaillant, tu fournis naturellement du contexte, expliques des préférences et partages des connaissances procédurales. Remarque quelles informations tu fournis de façon répétée.
 
-2. **Identify the reusable pattern**: After completing the task, identify what context you provided that would be useful for similar future tasks.
+2. **Identifier le schéma réutilisable** : après la tâche, identifie le contexte que tu as fourni et qui serait utile pour des tâches similaires à l'avenir.
 
-   **Example**: If you worked through a BigQuery analysis, you might have provided table names, field definitions, filtering rules (like "always exclude test accounts"), and common query patterns.
+   **Exemple** : si tu as mené une analyse BigQuery, tu as peut-être fourni des noms de tables, des définitions de champs, des règles de filtrage (comme « toujours exclure les comptes de test ») et des schémas de requêtes courants.
 
-3. **Ask Agent A to create a Skill**: "Create a Skill that captures this BigQuery analysis pattern we just used. Include the table schemas, naming conventions, and the rule about filtering test accounts."
+3. **Demander à l'Agent A de créer un skill** : « Crée un skill qui capture ce schéma d'analyse BigQuery qu'on vient d'utiliser. Inclus les schémas de tables, les conventions de nommage et la règle sur le filtrage des comptes de test. »
 
    <Tip>
-     Modern agents understand the Skill format and structure natively. You don't need special system prompts or a "writing skills" skill to get help creating Skills. Simply ask the agent to create a Skill and it will generate properly structured SKILL.md content with appropriate frontmatter and body content.
+     Les agents modernes comprennent nativement le format et la structure des skills. Tu n'as pas besoin de prompts système spéciaux ni d'un skill « writing skills » pour obtenir de l'aide à la création de skills. Demande simplement à l'agent de créer un skill et il générera un contenu SKILL.md correctement structuré, avec un frontmatter et un corps appropriés.
    </Tip>
 
-4. **Review for conciseness**: Check that Agent A hasn't added unnecessary explanations. Ask: "Remove the explanation about what win rate means - the agent already knows that."
+4. **Revoir la concision** : vérifie que l'Agent A n'a pas ajouté d'explications inutiles. Demande : « Retire l'explication de ce qu'est le win rate — l'agent le sait déjà. »
 
-5. **Improve information architecture**: Ask Agent A to organize the content more effectively. For example: "Organize this so the table schema is in a separate reference file. We might add more tables later."
+5. **Améliorer l'architecture de l'information** : demande à l'Agent A d'organiser le contenu plus efficacement. Par exemple : « Organise ça pour que le schéma de table soit dans un fichier de référence séparé. On ajoutera peut-être d'autres tables plus tard. »
 
-6. **Test on similar tasks**: Use the Skill with Agent B (a fresh instance with the Skill loaded) on related use cases. Observe whether Agent B finds the right information, applies rules correctly, and handles the task successfully.
+6. **Tester sur des tâches similaires** : utilise le skill avec l'Agent B (une nouvelle instance avec le skill chargé) sur des cas d'usage proches. Observe si l'Agent B trouve la bonne information, applique correctement les règles et mène la tâche à bien.
 
-7. **Iterate based on observation**: If Agent B struggles or misses something, return to Agent A with specifics: "When the agent used this Skill, it forgot to filter by date for Q4. Should we add a section about date filtering patterns?"
+7. **Itérer d'après l'observation** : si l'Agent B galère ou oublie quelque chose, reviens vers l'Agent A avec des détails : « Quand l'agent a utilisé ce skill, il a oublié de filtrer par date pour le Q4. Faut-il ajouter une section sur les schémas de filtrage par date ? »
 
-**Iterating on existing Skills:**
+**Itérer sur des skills existants :**
 
-The same hierarchical pattern continues when improving Skills. You alternate between:
+Le même schéma hiérarchique se poursuit lors de l'amélioration des skills. Tu alternes entre :
 
-* **Working with Agent A** (the expert who helps refine the Skill)
-* **Testing with Agent B** (the agent using the Skill to perform real work)
-* **Observing Agent B's behavior** and bringing insights back to Agent A
+* **Travailler avec l'Agent A** (l'expert qui t'aide à affiner le skill)
+* **Tester avec l'Agent B** (l'agent qui utilise le skill pour du travail réel)
+* **Observer le comportement de l'Agent B** et rapporter les enseignements à l'Agent A
 
-1. **Use the Skill in real workflows**: Give Agent B (with the Skill loaded) actual tasks, not test scenarios
+1. **Utiliser le skill dans des workflows réels** : donne à l'Agent B (avec le skill chargé) de vraies tâches, pas des scénarios de test
 
-2. **Observe Agent B's behavior**: Note where it struggles, succeeds, or makes unexpected choices
+2. **Observer le comportement de l'Agent B** : note où il galère, réussit ou fait des choix inattendus
 
-   **Example observation**: "When I asked Agent B for a regional sales report, it wrote the query but forgot to filter out test accounts, even though the Skill mentions this rule."
+   **Exemple d'observation** : « Quand j'ai demandé à l'Agent B un rapport de ventes régional, il a écrit la requête mais a oublié d'exclure les comptes de test, alors que le skill mentionne cette règle. »
 
-3. **Return to Agent A for improvements**: Share the current SKILL.md and describe what you observed. Ask: "I noticed Agent B forgot to filter test accounts when I asked for a regional report. The Skill mentions filtering, but maybe it's not prominent enough?"
+3. **Revenir vers l'Agent A pour des améliorations** : partage le SKILL.md actuel et décris ce que tu as observé. Demande : « J'ai remarqué que l'Agent B a oublié de filtrer les comptes de test quand j'ai demandé un rapport régional. Le skill mentionne le filtrage, mais peut-être qu'il n'est pas assez mis en avant ? »
 
-4. **Review Agent A's suggestions**: Agent A might suggest reorganizing to make rules more prominent, using stronger language like "MUST filter" instead of "always filter", or restructuring the workflow section.
+4. **Revoir les suggestions de l'Agent A** : l'Agent A pourrait suggérer de réorganiser pour rendre les règles plus visibles, d'utiliser un langage plus fort comme « MUST filter » au lieu de « always filter », ou de restructurer la section workflow.
 
-5. **Apply and test changes**: Update the Skill with Agent A's refinements, then test again with Agent B on similar requests
+5. **Appliquer et tester les changements** : mets à jour le skill avec les affinements de l'Agent A, puis re-teste avec l'Agent B sur des demandes similaires
 
-6. **Repeat based on usage**: Continue this observe-refine-test cycle as you encounter new scenarios. Each iteration improves the Skill based on real agent behavior, not assumptions.
+6. **Répéter selon l'usage** : poursuis ce cycle observer-affiner-tester à mesure que tu rencontres de nouveaux scénarios. Chaque itération améliore le skill d'après le comportement réel de l'agent, pas des hypothèses.
 
-**Gathering team feedback:**
+**Recueillir les retours de l'équipe :**
 
-1. Share Skills with teammates and observe their usage
-2. Ask: Does the Skill activate when expected? Are instructions clear? What's missing?
-3. Incorporate feedback to address blind spots in your own usage patterns
+1. Partage les skills avec tes coéquipiers et observe leur usage
+2. Demande : le skill s'active-t-il quand attendu ? Les instructions sont-elles claires ? Que manque-t-il ?
+3. Intègre les retours pour corriger les angles morts de tes propres schémas d'usage
 
-**Why this approach works**: Agent A understands agent needs, you provide domain expertise, Agent B reveals gaps through real usage, and iterative refinement improves Skills based on observed behavior rather than assumptions.
+**Pourquoi cette approche fonctionne** : l'Agent A comprend les besoins des agents, tu apportes l'expertise métier, l'Agent B révèle les lacunes par l'usage réel, et l'affinement itératif améliore les skills d'après le comportement observé plutôt que des hypothèses.
 
-### Observe how agents navigate Skills
+### Observe comment les agents naviguent dans les skills
 
-As you iterate on Skills, pay attention to how agents actually use them in practice. Watch for:
+En itérant sur les skills, prête attention à la façon dont les agents les utilisent réellement en pratique. Guette :
 
-* **Unexpected exploration paths**: Does the agent read files in an order you didn't anticipate? This might indicate your structure isn't as intuitive as you thought
-* **Missed connections**: Does the agent fail to follow references to important files? Your links might need to be more explicit or prominent
-* **Overreliance on certain sections**: If the agent repeatedly reads the same file, consider whether that content should be in the main SKILL.md instead
-* **Ignored content**: If the agent never accesses a bundled file, it might be unnecessary or poorly signaled in the main instructions
+* **Des chemins d'exploration inattendus** : l'agent lit-il les fichiers dans un ordre que tu n'avais pas prévu ? Cela peut indiquer que ta structure n'est pas aussi intuitive que tu le pensais
+* **Des connexions ratées** : l'agent oublie-t-il de suivre les références vers des fichiers importants ? Tes liens doivent peut-être être plus explicites ou visibles
+* **Une sur-dépendance à certaines sections** : si l'agent lit sans cesse le même fichier, demande-toi si ce contenu ne devrait pas être dans le SKILL.md principal
+* **Du contenu ignoré** : si l'agent n'accède jamais à un fichier joint, il est peut-être inutile ou mal signalé dans les instructions principales
 
-Iterate based on these observations rather than assumptions. The 'name' and 'description' in your Skill's metadata are particularly critical. Agents use these when deciding whether to trigger the Skill in response to the current task. Make sure they clearly describe what the Skill does and when it should be used.
+Itère d'après ces observations plutôt que d'après des hypothèses. Le `name` et la `description` des métadonnées de ton skill sont particulièrement critiques. Les agents s'en servent pour décider de déclencher ou non le skill face à la tâche courante. Assure-toi qu'ils décrivent clairement ce que fait le skill et quand l'utiliser.
 
-## Anti-patterns to avoid
+## Anti-schémas à éviter
 
-### Avoid Windows-style paths
+### Évite les chemins à la Windows
 
-Always use forward slashes in file paths, even on Windows:
+Utilise toujours des barres obliques dans les chemins de fichiers, même sous Windows :
 
-* ✓ **Good**: `scripts/helper.py`, `reference/guide.md`
-* ✗ **Avoid**: `scripts\helper.py`, `reference\guide.md`
+* ✓ **Bon** : `scripts/helper.py`, `reference/guide.md`
+* ✗ **À éviter** : `scripts\helper.py`, `reference\guide.md`
 
-Unix-style paths work across all platforms, while Windows-style paths cause errors on Unix systems.
+Les chemins de type Unix fonctionnent sur toutes les plateformes, tandis que les chemins de type Windows provoquent des erreurs sur les systèmes Unix.
 
-### Avoid offering too many options
+### Évite de proposer trop d'options
 
-Don't present multiple approaches unless necessary:
+Ne présente pas plusieurs approches sauf si nécessaire :
 
 ````markdown  theme={null}
 **Bad example: Too many choices** (confusing):
@@ -848,15 +848,15 @@ import pdfplumber
 For scanned PDFs requiring OCR, use pdf2image with pytesseract instead."
 ````
 
-## Advanced: Skills with executable code
+## Avancé : skills avec code exécutable
 
-The sections below focus on Skills that include executable scripts. If your Skill uses only markdown instructions, skip to [Checklist for effective Skills](#checklist-for-effective-skills).
+Les sections ci-dessous concernent les skills incluant des scripts exécutables. Si ton skill n'utilise que des instructions markdown, passe directement à la [Checklist des skills efficaces](#checklist-for-effective-skills).
 
-### Solve, don't punt
+### Résous, ne renvoie pas la balle
 
-When writing scripts for Skills, handle error conditions rather than punting to the agent.
+Quand tu écris des scripts pour des skills, gère les conditions d'erreur plutôt que de renvoyer la balle à l'agent.
 
-**Good example: Handle errors explicitly**:
+**Bon exemple : gérer les erreurs explicitement** :
 
 ```python  theme={null}
 def process_file(path):
@@ -876,7 +876,7 @@ def process_file(path):
         return ''
 ```
 
-**Bad example: Punt to the agent**:
+**Mauvais exemple : renvoyer la balle à l'agent** :
 
 ```python  theme={null}
 def process_file(path):
@@ -884,9 +884,9 @@ def process_file(path):
     return open(path).read()
 ```
 
-Configuration parameters should also be justified and documented to avoid "voodoo constants" (Ousterhout's law). If you don't know the right value, how will the agent determine it?
+Les paramètres de configuration doivent aussi être justifiés et documentés pour éviter les « constantes vaudou » (loi d'Ousterhout). Si tu ne connais pas la bonne valeur, comment l'agent la déterminera-t-il ?
 
-**Good example: Self-documenting**:
+**Bon exemple : auto-documenté** :
 
 ```python  theme={null}
 # HTTP requests typically complete within 30 seconds
@@ -898,36 +898,36 @@ REQUEST_TIMEOUT = 30
 MAX_RETRIES = 3
 ```
 
-**Bad example: Magic numbers**:
+**Mauvais exemple : nombres magiques** :
 
 ```python  theme={null}
 TIMEOUT = 47  # Why 47?
 RETRIES = 5   # Why 5?
 ```
 
-### Provide utility scripts
+### Fournis des scripts utilitaires
 
-Even if your agent could write a script, pre-made scripts offer advantages:
+Même si ton agent pouvait écrire un script, des scripts pré-écrits offrent des avantages :
 
-**Benefits of utility scripts**:
+**Avantages des scripts utilitaires** :
 
-* More reliable than generated code
-* Save tokens (no need to include code in context)
-* Save time (no code generation required)
-* Ensure consistency across uses
+* Plus fiables que du code généré
+* Économisent des tokens (pas besoin d'inclure le code dans le contexte)
+* Gagnent du temps (pas de génération de code)
+* Assurent la cohérence entre les usages
 
 <img src="https://mintcdn.com/anthropic-claude-docs/4Bny2bjzuGBK7o00/images/agent-skills-executable-scripts.png?fit=max&auto=format&n=4Bny2bjzuGBK7o00&q=85&s=4bbc45f2c2e0bee9f2f0d5da669bad00" alt="Bundling executable scripts alongside instruction files" data-og-width="2048" width="2048" data-og-height="1154" height="1154" data-path="images/agent-skills-executable-scripts.png" data-optimize="true" data-opv="3" srcset="https://mintcdn.com/anthropic-claude-docs/4Bny2bjzuGBK7o00/images/agent-skills-executable-scripts.png?w=280&fit=max&auto=format&n=4Bny2bjzuGBK7o00&q=85&s=9a04e6535a8467bfeea492e517de389f 280w, https://mintcdn.com/anthropic-claude-docs/4Bny2bjzuGBK7o00/images/agent-skills-executable-scripts.png?w=560&fit=max&auto=format&n=4Bny2bjzuGBK7o00&q=85&s=e49333ad90141af17c0d7651cca7216b 560w, https://mintcdn.com/anthropic-claude-docs/4Bny2bjzuGBK7o00/images/agent-skills-executable-scripts.png?w=840&fit=max&auto=format&n=4Bny2bjzuGBK7o00&q=85&s=954265a5df52223d6572b6214168c428 840w, https://mintcdn.com/anthropic-claude-docs/4Bny2bjzuGBK7o00/images/agent-skills-executable-scripts.png?w=1100&fit=max&auto=format&n=4Bny2bjzuGBK7o00&q=85&s=2ff7a2d8f2a83ee8af132b29f10150fd 1100w, https://mintcdn.com/anthropic-claude-docs/4Bny2bjzuGBK7o00/images/agent-skills-executable-scripts.png?w=1650&fit=max&auto=format&n=4Bny2bjzuGBK7o00&q=85&s=48ab96245e04077f4d15e9170e081cfb 1650w, https://mintcdn.com/anthropic-claude-docs/4Bny2bjzuGBK7o00/images/agent-skills-executable-scripts.png?w=2500&fit=max&auto=format&n=4Bny2bjzuGBK7o00&q=85&s=0301a6c8b3ee879497cc5b5483177c90 2500w" />
 
-The diagram above shows how executable scripts work alongside instruction files. The instruction file (forms.md) references the script, and the agent can execute it without loading its contents into context.
+Le schéma ci-dessus montre comment les scripts exécutables fonctionnent aux côtés des fichiers d'instructions. Le fichier d'instructions (forms.md) référence le script, et l'agent peut l'exécuter sans en charger le contenu dans le contexte.
 
-**Important distinction**: Make clear in your instructions whether the agent should:
+**Distinction importante** : indique clairement dans tes instructions si l'agent doit :
 
-* **Execute the script** (most common): "Run `analyze_form.py` to extract fields"
-* **Read it as reference** (for complex logic): "See `analyze_form.py` for the field extraction algorithm"
+* **Exécuter le script** (le plus courant) : « Run `analyze_form.py` to extract fields »
+* **Le lire comme référence** (pour une logique complexe) : « See `analyze_form.py` for the field extraction algorithm »
 
-For most utility scripts, execution is preferred because it's more reliable and efficient. See the [Runtime environment](#runtime-environment) section below for details on how script execution works.
+Pour la plupart des scripts utilitaires, l'exécution est préférable car plus fiable et efficace. Voir la section [Runtime environment](#runtime-environment) ci-dessous pour les détails sur l'exécution des scripts.
 
-**Example**:
+**Exemple** :
 
 ````markdown  theme={null}
 ## Utility scripts
@@ -960,9 +960,9 @@ python scripts/fill_form.py input.pdf fields.json output.pdf
 ```
 ````
 
-### Use visual analysis
+### Utilise l'analyse visuelle
 
-When inputs can be rendered as images, have the agent analyze them:
+Quand les entrées peuvent être rendues sous forme d'images, fais-les analyser par l'agent :
 
 ````markdown  theme={null}
 ## Form layout analysis
@@ -977,65 +977,65 @@ When inputs can be rendered as images, have the agent analyze them:
 ````
 
 <Note>
-  In this example, you'd need to write the `pdf_to_images.py` script.
+  Dans cet exemple, tu devrais écrire le script `pdf_to_images.py`.
 </Note>
 
-Agent vision capabilities help understand layouts and structures.
+Les capacités de vision de l'agent aident à comprendre les mises en page et les structures.
 
-### Create verifiable intermediate outputs
+### Crée des sorties intermédiaires vérifiables
 
-When agents perform complex, open-ended tasks, they can make mistakes. The "plan-validate-execute" pattern catches errors early by having the agent first create a plan in a structured format, then validate that plan with a script before executing it.
+Quand les agents accomplissent des tâches complexes et ouvertes, ils peuvent commettre des erreurs. Le schéma « planifier-valider-exécuter » détecte les erreurs tôt : l'agent crée d'abord un plan dans un format structuré, puis valide ce plan avec un script avant de l'exécuter.
 
-**Example**: Imagine asking the agent to update 50 form fields in a PDF based on a spreadsheet. Without validation, it might reference non-existent fields, create conflicting values, miss required fields, or apply updates incorrectly.
+**Exemple** : imagine demander à l'agent de mettre à jour 50 champs de formulaire dans un PDF à partir d'un tableur. Sans validation, il pourrait référencer des champs inexistants, créer des valeurs contradictoires, oublier des champs requis ou appliquer les mises à jour de travers.
 
-**Solution**: Use the workflow pattern shown above (PDF form filling), but add an intermediate `changes.json` file that gets validated before applying changes. The workflow becomes: analyze → **create plan file** → **validate plan** → execute → verify.
+**Solution** : utilise le schéma de workflow montré plus haut (remplissage de formulaire PDF), mais ajoute un fichier intermédiaire `changes.json` qui est validé avant d'appliquer les changements. Le workflow devient : analyser → **créer le fichier de plan** → **valider le plan** → exécuter → vérifier.
 
-**Why this pattern works:**
+**Pourquoi ce schéma fonctionne :**
 
-* **Catches errors early**: Validation finds problems before changes are applied
-* **Machine-verifiable**: Scripts provide objective verification
-* **Reversible planning**: The agent can iterate on the plan without touching originals
-* **Clear debugging**: Error messages point to specific problems
+* **Détecte les erreurs tôt** : la validation trouve les problèmes avant d'appliquer les changements
+* **Vérifiable par machine** : les scripts fournissent une vérification objective
+* **Planification réversible** : l'agent peut itérer sur le plan sans toucher aux originaux
+* **Débogage clair** : les messages d'erreur pointent vers des problèmes précis
 
-**When to use**: Batch operations, destructive changes, complex validation rules, high-stakes operations.
+**Quand l'utiliser** : opérations par lots, changements destructifs, règles de validation complexes, opérations à fort enjeu.
 
-**Implementation tip**: Make validation scripts verbose with specific error messages like "Field 'signature\_date' not found. Available fields: customer\_name, order\_total, signature\_date\_signed" to help the agent fix issues.
+**Astuce de mise en œuvre** : rends les scripts de validation verbeux avec des messages d'erreur précis comme « Field 'signature\_date' not found. Available fields: customer\_name, order\_total, signature\_date\_signed » pour aider l'agent à corriger les problèmes.
 
-### Package dependencies
+### Dépendances de paquets
 
-Skills run in the code execution environment with platform-specific limitations:
+Les skills s'exécutent dans l'environnement d'exécution de code avec des limitations propres à chaque plateforme :
 
-* **claude.ai**: Can install packages from npm and PyPI and pull from GitHub repositories
-* **Anthropic API**: Has no network access and no runtime package installation
+* **claude.ai** : peut installer des paquets depuis npm et PyPI et récupérer depuis des dépôts GitHub
+* **API Anthropic** : n'a aucun accès réseau ni installation de paquets à l'exécution
 
-List required packages in your SKILL.md and verify they're available in the [code execution tool documentation](https://platform.claude.com/docs/en/agents-and-tools/tool-use/code-execution-tool).
+Liste les paquets requis dans ton SKILL.md et vérifie leur disponibilité dans la [documentation de l'outil d'exécution de code](https://platform.claude.com/docs/en/agents-and-tools/tool-use/code-execution-tool).
 
-### Runtime environment
+### Environnement d'exécution
 
-Skills run in a code execution environment with filesystem access, bash commands, and code execution capabilities. For the conceptual explanation of this architecture, see [The Skills architecture](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview#the-skills-architecture) in the overview.
+Les skills s'exécutent dans un environnement d'exécution de code avec accès au système de fichiers, commandes bash et exécution de code. Pour l'explication conceptuelle de cette architecture, voir [The Skills architecture](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview#the-skills-architecture) dans la présentation.
 
-**How this affects your authoring:**
+**Comment cela influe sur ta rédaction :**
 
-**How agents access Skills:**
+**Comment les agents accèdent aux skills :**
 
-1. **Metadata pre-loaded**: At startup, the name and description from all Skills' YAML frontmatter are loaded into the system prompt
-2. **Files read on-demand**: Agents use their file-reading tools to access SKILL.md and other files from the filesystem when needed
-3. **Scripts executed efficiently**: Utility scripts can be executed via bash without loading their full contents into context. Only the script's output consumes tokens
-4. **No context penalty for large files**: Reference files, data, or documentation don't consume context tokens until actually read
+1. **Métadonnées préchargées** : au démarrage, le nom et la description du frontmatter YAML de tous les skills sont chargés dans le prompt système
+2. **Fichiers lus à la demande** : les agents utilisent leurs outils de lecture pour accéder à SKILL.md et aux autres fichiers du système de fichiers au besoin
+3. **Scripts exécutés efficacement** : les scripts utilitaires peuvent être exécutés via bash sans charger leur contenu complet dans le contexte. Seule la sortie du script consomme des tokens
+4. **Pas de pénalité de contexte pour les gros fichiers** : les fichiers de référence, données ou documentation ne consomment pas de tokens de contexte tant qu'ils ne sont pas lus
 
-* **File paths matter**: Agents navigate your skill directory like a filesystem. Use forward slashes (`reference/guide.md`), not backslashes
-* **Name files descriptively**: Use names that indicate content: `form_validation_rules.md`, not `doc2.md`
-* **Organize for discovery**: Structure directories by domain or feature
-  * Good: `reference/finance.md`, `reference/sales.md`
-  * Bad: `docs/file1.md`, `docs/file2.md`
-* **Bundle comprehensive resources**: Include complete API docs, extensive examples, large datasets; no context penalty until accessed
-* **Prefer scripts for deterministic operations**: Write `validate_form.py` rather than asking the agent to generate validation code
-* **Make execution intent clear**:
-  * "Run `analyze_form.py` to extract fields" (execute)
-  * "See `analyze_form.py` for the extraction algorithm" (read as reference)
-* **Test file access patterns**: Verify the agent can navigate your directory structure by testing with real requests
+* **Les chemins de fichiers comptent** : les agents naviguent dans ton répertoire de skill comme un système de fichiers. Utilise des barres obliques (`reference/guide.md`), pas des antislashs
+* **Nomme les fichiers de façon descriptive** : utilise des noms qui indiquent le contenu : `form_validation_rules.md`, pas `doc2.md`
+* **Organise pour la découverte** : structure les répertoires par domaine ou fonctionnalité
+  * Bon : `reference/finance.md`, `reference/sales.md`
+  * Mauvais : `docs/file1.md`, `docs/file2.md`
+* **Joins des ressources complètes** : inclus des docs d'API complètes, des exemples extensifs, de gros jeux de données ; aucune pénalité de contexte tant qu'ils ne sont pas consultés
+* **Préfère les scripts pour les opérations déterministes** : écris `validate_form.py` plutôt que de demander à l'agent de générer le code de validation
+* **Rends l'intention d'exécution claire** :
+  * « Run `analyze_form.py` to extract fields » (exécuter)
+  * « See `analyze_form.py` for the extraction algorithm » (lire comme référence)
+* **Teste les schémas d'accès aux fichiers** : vérifie que l'agent peut naviguer dans ta structure de répertoires en testant avec de vraies requêtes
 
-**Example:**
+**Exemple :**
 
 ```
 bigquery-skill/
@@ -1046,33 +1046,33 @@ bigquery-skill/
     └── product.md (usage analytics)
 ```
 
-When the user asks about revenue, the agent reads SKILL.md, sees the reference to `reference/finance.md`, and invokes bash to read just that file. The sales.md and product.md files remain on the filesystem, consuming zero context tokens until needed. This filesystem-based model is what enables progressive disclosure. Agents can navigate and selectively load exactly what each task requires.
+Quand l'utilisateur pose une question sur le chiffre d'affaires, l'agent lit SKILL.md, voit la référence à `reference/finance.md` et invoque bash pour lire uniquement ce fichier. Les fichiers sales.md et product.md restent sur le système de fichiers, consommant zéro token de contexte tant qu'ils ne sont pas nécessaires. Ce modèle basé sur le système de fichiers est ce qui permet la divulgation progressive : les agents peuvent naviguer et charger sélectivement exactement ce que chaque tâche requiert.
 
-For complete details on the technical architecture, see [How Skills work](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview#how-skills-work) in the Skills overview.
+Pour tous les détails sur l'architecture technique, voir [How Skills work](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview#how-skills-work) dans la présentation des Skills.
 
-### MCP tool references
+### Références aux outils MCP
 
-If your Skill uses MCP (Model Context Protocol) tools, always use fully qualified tool names to avoid "tool not found" errors.
+Si ton skill utilise des outils MCP (Model Context Protocol), utilise toujours des noms d'outils pleinement qualifiés pour éviter les erreurs « tool not found ».
 
-**Format**: `ServerName:tool_name`
+**Format** : `ServerName:tool_name`
 
-**Example**:
+**Exemple** :
 
 ```markdown  theme={null}
 Use the BigQuery:bigquery_schema tool to retrieve table schemas.
 Use the GitHub:create_issue tool to create issues.
 ```
 
-Where:
+Où :
 
-* `BigQuery` and `GitHub` are MCP server names
-* `bigquery_schema` and `create_issue` are the tool names within those servers
+* `BigQuery` et `GitHub` sont les noms des serveurs MCP
+* `bigquery_schema` et `create_issue` sont les noms des outils au sein de ces serveurs
 
-Without the server prefix, agents may fail to locate the tool, especially when multiple MCP servers are available.
+Sans le préfixe du serveur, les agents peuvent ne pas localiser l'outil, surtout quand plusieurs serveurs MCP sont disponibles.
 
-### Avoid assuming tools are installed
+### Ne suppose pas que les outils sont installés
 
-Don't assume packages are available:
+Ne suppose pas que les paquets sont disponibles :
 
 ````markdown  theme={null}
 **Bad example: Assumes installation**:
@@ -1088,63 +1088,63 @@ reader = PdfReader("file.pdf")
 ```"
 ````
 
-## Technical notes
+## Notes techniques
 
-### YAML frontmatter requirements
+### Exigences du frontmatter YAML
 
-The SKILL.md frontmatter requires `name` (64 characters max) and `description` (1024 characters max) fields. See the [Skills overview](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview#skill-structure) for complete structure details.
+Le frontmatter de SKILL.md exige les champs `name` (64 caractères max) et `description` (1024 caractères max). Voir la [présentation des Skills](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview#skill-structure) pour tous les détails de structure.
 
-### Token budgets
+### Budgets de tokens
 
-Keep SKILL.md body under 500 lines for optimal performance. If your content exceeds this, split it into separate files using the progressive disclosure patterns described earlier. For architectural details, see the [Skills overview](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview#how-skills-work).
+Garde le corps de SKILL.md sous 500 lignes pour des performances optimales. Si ton contenu dépasse cette limite, découpe-le en fichiers séparés à l'aide des schémas de divulgation progressive décrits plus haut. Pour les détails d'architecture, voir la [présentation des Skills](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview#how-skills-work).
 
-## Checklist for effective Skills
+## Checklist des skills efficaces
 
-Before sharing a Skill, verify:
+Avant de partager un skill, vérifie :
 
-### Core quality
+### Qualité de base
 
-* [ ] Description is specific and includes key terms
-* [ ] Description includes both what the Skill does and when to use it
-* [ ] SKILL.md body is under 500 lines
-* [ ] Additional details are in separate files (if needed)
-* [ ] No time-sensitive information (or in "old patterns" section)
-* [ ] Consistent terminology throughout
-* [ ] Examples are concrete, not abstract
-* [ ] File references are one level deep
-* [ ] Progressive disclosure used appropriately
-* [ ] Workflows have clear steps
+* [ ] La description est précise et inclut les termes-clés
+* [ ] La description indique à la fois ce que fait le skill et quand l'utiliser
+* [ ] Le corps de SKILL.md fait moins de 500 lignes
+* [ ] Les détails supplémentaires sont dans des fichiers séparés (si besoin)
+* [ ] Aucune information sensible au temps (ou placée en section « old patterns »)
+* [ ] Terminologie cohérente partout
+* [ ] Les exemples sont concrets, pas abstraits
+* [ ] Les références de fichiers sont à un seul niveau de profondeur
+* [ ] La divulgation progressive est utilisée à bon escient
+* [ ] Les workflows ont des étapes claires
 
-### Code and scripts
+### Code et scripts
 
-* [ ] Scripts solve problems rather than punt to the agent
-* [ ] Error handling is explicit and helpful
-* [ ] No "voodoo constants" (all values justified)
-* [ ] Required packages listed in instructions and verified as available
-* [ ] Scripts have clear documentation
-* [ ] No Windows-style paths (all forward slashes)
-* [ ] Validation/verification steps for critical operations
-* [ ] Feedback loops included for quality-critical tasks
+* [ ] Les scripts résolvent les problèmes au lieu de renvoyer la balle à l'agent
+* [ ] La gestion des erreurs est explicite et utile
+* [ ] Aucune « constante vaudou » (toutes les valeurs sont justifiées)
+* [ ] Paquets requis listés dans les instructions et vérifiés comme disponibles
+* [ ] Les scripts ont une documentation claire
+* [ ] Aucun chemin à la Windows (uniquement des barres obliques)
+* [ ] Étapes de validation/vérification pour les opérations critiques
+* [ ] Boucles de rétroaction incluses pour les tâches critiques en qualité
 
-### Testing
+### Tests
 
-* [ ] At least three evaluations created
-* [ ] Tested with Haiku, Sonnet, and Opus
-* [ ] Tested with real usage scenarios
-* [ ] Team feedback incorporated (if applicable)
+* [ ] Au moins trois évaluations créées
+* [ ] Testé avec Haiku, Sonnet et Opus
+* [ ] Testé avec des scénarios d'usage réels
+* [ ] Retours de l'équipe intégrés (le cas échéant)
 
-## Next steps
+## Prochaines étapes
 
 <CardGroup cols={2}>
   <Card title="Get started with Agent Skills" icon="rocket" href="https://platform.claude.com/docs/en/agents-and-tools/agent-skills/quickstart">
-    Create your first Skill
+    Crée ton premier skill
   </Card>
 
   <Card title="Use Skills in Claude Code" icon="terminal" href="https://code.claude.com/docs/en/skills">
-    Create and manage Skills in Claude Code
+    Crée et gère des skills dans Claude Code
   </Card>
 
   <Card title="Use Skills with the API" icon="code" href="https://platform.claude.com/docs/en/build-with-claude/skills-guide">
-    Upload and use Skills programmatically
+    Charge et utilise des skills par programmation
   </Card>
 </CardGroup>

@@ -1,106 +1,106 @@
-# Scoped Re-Review Prompt Template
+# Gabarit de prompt pour la re-revue ciblée
 
-Use this template when dispatching a re-review after a fix round. The
-re-reviewer verifies the findings were addressed and checks the fix diff for
-new breakage. It is not a fresh review — the full review already happened.
+Utilise ce gabarit pour dispatcher une re-revue après une salve de corrections. Le
+re-reviewer vérifie que les constats ont été traités et contrôle le diff de correction pour
+détecter de nouvelles casses. Ce n'est pas une revue à neuf — la revue complète a déjà eu lieu.
 
-**Purpose:** Verify each finding from the previous review was addressed, and
-that the fix itself broke nothing.
+**But :** vérifier que chaque constat de la revue précédente a été traité, et
+que la correction elle-même n'a rien cassé.
 
 ```
 Subagent (general-purpose):
   description: "Re-review Task N fix round R"
-  model: [MODEL — REQUIRED: choose per SKILL.md Model Selection; an omitted
-         model silently inherits the session's most expensive one]
+  model: [MODEL — REQUIS : choisis selon la section Model Selection du SKILL.md ;
+         un modèle omis hérite silencieusement du plus coûteux de la session]
   prompt: |
-    You are re-reviewing one task's fix round. A previous review produced
-    findings; an implementer has attempted to fix them. Your job is to
-    verdict each finding and inspect the fix diff — nothing else.
+    Tu re-revois une salve de corrections d'une tâche. Une revue précédente a produit
+    des constats ; un implémenteur a tenté de les corriger. Ton rôle est de rendre un
+    verdict sur chaque constat et d'inspecter le diff de correction — rien d'autre.
 
-    ## The Task
+    ## La tâche
 
-    Read the task brief: [BRIEF_FILE]
+    Lis le briefing de tâche : [BRIEF_FILE]
 
-    ## The Findings Under Verification
+    ## Les constats à vérifier
 
     [FINDINGS]
 
-    ## The Fix
+    ## La correction
 
-    Read the implementer's report (fix reports are appended at the end):
+    Lis le rapport de l'implémenteur (les rapports de correction sont ajoutés à la fin) :
     [REPORT_FILE]
 
-    **Fix base:** [FIX_BASE_SHA] (the head the previous review saw)
+    **Fix base:** [FIX_BASE_SHA] (le head que la revue précédente a vu)
     **Head:** [HEAD_SHA]
     **Diff file:** [DIFF_FILE]
 
-    Read the diff file once — it contains the fix commits, a stat summary,
-    and the fix diff with surrounding context. Do not re-run git commands.
-    If the diff file is missing, fetch the diff yourself:
-    `git diff --stat [FIX_BASE_SHA]..[HEAD_SHA]` and
+    Lis le fichier de diff une fois — il contient les commits de correction, un résumé
+    statistique et le diff de correction avec son contexte. Ne relance pas de commandes git.
+    Si le fichier de diff est absent, récupère le diff toi-même :
+    `git diff --stat [FIX_BASE_SHA]..[HEAD_SHA]` et
     `git diff [FIX_BASE_SHA]..[HEAD_SHA]`.
 
-    Your review is read-only on this checkout. Do not mutate the working
-    tree, the index, HEAD, or branch state in any way.
+    Ta revue est en lecture seule sur ce checkout. Ne modifie ni l'arbre de travail,
+    ni l'index, ni HEAD, ni l'état de branche, d'aucune façon.
 
-    ## Scope
+    ## Périmètre
 
-    Your scope is the findings list and the fix diff. Verdict every finding.
-    Inspect the fix diff for new problems the fix itself introduced. Do NOT
-    re-review code the fix did not touch: if you notice an issue entirely
-    outside the fix diff, report it under Out-of-Scope Observations — it
-    does not block this task and does not extend the loop. A broad
-    whole-branch review happens after all tasks are complete.
+    Ton périmètre, c'est la liste des constats et le diff de correction. Rends un verdict sur chaque constat.
+    Inspecte le diff de correction pour les nouveaux problèmes que la correction elle-même a introduits. NE
+    re-revois PAS du code que la correction n'a pas touché : si tu remarques un problème entièrement
+    hors du diff de correction, signale-le sous Out-of-Scope Observations — il
+    ne bloque pas cette tâche et n'étend pas la boucle. Une revue large de toute
+    la branche a lieu une fois toutes les tâches terminées.
 
     ## Tests
 
-    The implementer re-ran the tests covering the amended code and appended
-    the results to the report file. Treat the report as unverified claims:
-    confirm the fix report names the covering tests and shows their output,
-    and verify the claims against the diff. Do not re-run the suite to
-    confirm their report. Run a test only when reading the code raises a
-    specific doubt that no existing run answers — and then a focused test,
-    never a package-wide suite.
+    L'implémenteur a relancé les tests couvrant le code amendé et a ajouté
+    les résultats au fichier de rapport. Traite le rapport comme des affirmations non vérifiées :
+    confirme que le rapport de correction nomme les tests couvrants et montre leur sortie,
+    et vérifie les affirmations contre le diff. Ne relance pas la suite pour
+    confirmer son rapport. Ne lance un test que lorsque la lecture du code soulève un
+    doute spécifique qu'aucun run existant ne répond — et alors un test ciblé,
+    jamais une suite à l'échelle du paquet.
 
-    ## Output Format
+    ## Format de sortie
 
-    Your final message is the report itself: begin directly with the first
-    finding's verdict. Every line is a verdict, a finding with file:line,
-    or a check you ran — no preamble, no process narration.
+    Ton message final EST le rapport lui-même : commence directement par le verdict du
+    premier constat. Chaque ligne est un verdict, un constat avec file:line,
+    ou une vérification que tu as faite — pas de préambule, pas de narration de processus.
 
     ### Finding Verdicts
 
-    For each finding in The Findings Under Verification, in order:
-    - **[finding one-liner]** — ADDRESSED | NOT ADDRESSED, with file:line
-      evidence. "Attempted" is not addressed: the specific defect must no
-      longer exist.
+    Pour chaque constat de « Les constats à vérifier », dans l'ordre :
+    - **[constat en une ligne]** — ADDRESSED | NOT ADDRESSED, avec preuve
+      file:line. « Tenté » n'est pas traité : le défaut spécifique doit ne
+      plus exister.
 
     ### New Breakage in the Fix Diff
 
-    Anything the fix itself broke or introduced, with severity
-    (Critical/Important/Minor) and file:line. "None" if clean.
+    Tout ce que la correction elle-même a cassé ou introduit, avec sévérité
+    (Critical/Important/Minor) et file:line. « None » si propre.
 
     ### Out-of-Scope Observations
 
-    Issues you noticed entirely outside the fix diff. Non-blocking; the
-    controller ledgers these for the final review. "None" if none.
+    Problèmes que tu as remarqués entièrement hors du diff de correction. Non bloquants ; le
+    contrôleur les consigne au ledger pour la revue finale. « None » si aucun.
 
     ### Verdict
 
     **Fix round:** [All findings addressed, no new Critical/Important
-    breakage | Findings remain open] — list the open ones.
+    breakage | Findings remain open] — liste ceux qui restent ouverts.
 ```
 
-**Placeholders:**
-- `[MODEL]` — REQUIRED: reviewer model per SKILL.md Model Selection; scoped
-  re-reviews of small fix diffs take a cheap-to-mid tier
-- `[BRIEF_FILE]` — the task brief file (same file the implementer worked from)
-- `[FINDINGS]` — the Critical/Important findings and spec gaps from the
-  previous review, copied verbatim, one per bullet
-- `[REPORT_FILE]` — the implementer's report file (fix reports appended)
-- `[FIX_BASE_SHA]` — the head the previous review saw
-- `[HEAD_SHA]` — current commit
-- `[DIFF_FILE]` — the path `scripts/review-package PLAN_FILE FIX_BASE HEAD` printed
+**Placeholders :**
+- `[MODEL]` — REQUIS : modèle du reviewer selon la section Model Selection du SKILL.md ; les
+  re-revues ciblées de petits diffs de correction prennent un palier bon marché à intermédiaire
+- `[BRIEF_FILE]` — le fichier de briefing de tâche (le même depuis lequel l'implémenteur a travaillé)
+- `[FINDINGS]` — les constats Critical/Important et les écarts de spec de la
+  revue précédente, copiés verbatim, un par puce
+- `[REPORT_FILE]` — le fichier de rapport de l'implémenteur (rapports de correction ajoutés)
+- `[FIX_BASE_SHA]` — le head que la revue précédente a vu
+- `[HEAD_SHA]` — commit actuel
+- `[DIFF_FILE]` — le chemin que `scripts/review-package PLAN_FILE FIX_BASE HEAD` a affiché
 
-**Re-reviewer returns:** per-finding verdicts (ADDRESSED / NOT ADDRESSED),
-new breakage in the fix diff, out-of-scope observations, and a round verdict.
+**Le re-reviewer renvoie :** les verdicts par constat (ADDRESSED / NOT ADDRESSED),
+les nouvelles casses dans le diff de correction, les observations hors périmètre, et un verdict de salve.

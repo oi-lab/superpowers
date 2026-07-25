@@ -1,48 +1,35 @@
-# Root Cause Tracing
+# Remonter à la cause racine
 
-## Overview
+## Vue d'ensemble
 
-Bugs often manifest deep in the call stack (git init in wrong directory, file created in wrong location, database opened with wrong path). Your instinct is to fix where the error appears, but that's treating a symptom.
+Les bugs se manifestent souvent profondément dans la pile d'appels (git init dans le mauvais répertoire, fichier créé au mauvais endroit, base de données ouverte avec le mauvais chemin). Ton instinct est de corriger là où l'erreur apparaît, mais c'est traiter un symptôme.
 
-**Core principle:** Trace backward through the call chain until you find the original trigger, then fix at the source.
+**Principe central :** remonte à rebours la chaîne d'appels jusqu'à trouver le déclencheur d'origine, puis corrige à la source.
 
-## When to Use
+## Quand l'utiliser
 
-```dot
-digraph when_to_use {
-    "Bug appears deep in stack?" [shape=diamond];
-    "Can trace backwards?" [shape=diamond];
-    "Fix at symptom point" [shape=box];
-    "Trace to original trigger" [shape=box];
-    "BETTER: Also add defense-in-depth" [shape=box];
+Si le bug apparaît profondément dans la pile et que tu peux remonter à rebours, remonte jusqu'au déclencheur d'origine — et, mieux encore, ajoute aussi de la défense en profondeur. Si tu ne peux pas remonter (impasse), corrige au point du symptôme.
 
-    "Bug appears deep in stack?" -> "Can trace backwards?" [label="yes"];
-    "Can trace backwards?" -> "Trace to original trigger" [label="yes"];
-    "Can trace backwards?" -> "Fix at symptom point" [label="no - dead end"];
-    "Trace to original trigger" -> "BETTER: Also add defense-in-depth";
-}
-```
+**Utilise quand :**
+- L'erreur se produit profondément dans l'exécution (pas au point d'entrée)
+- La stack trace montre une longue chaîne d'appels
+- L'origine des données invalides n'est pas claire
+- Il faut trouver quel test/code déclenche le problème
 
-**Use when:**
-- Error happens deep in execution (not at entry point)
-- Stack trace shows long call chain
-- Unclear where invalid data originated
-- Need to find which test/code triggers the problem
+## Le processus de traçage
 
-## The Tracing Process
-
-### 1. Observe the Symptom
+### 1. Observe le symptôme
 ```
 Error: git init failed in ~/project/packages/core
 ```
 
-### 2. Find Immediate Cause
-**What code directly causes this?**
+### 2. Trouve la cause immédiate
+**Quel code cause directement ceci ?**
 ```typescript
 await execFileAsync('git', ['init'], { cwd: projectDir });
 ```
 
-### 3. Ask: What Called This?
+### 3. Demande : qu'est-ce qui a appelé ceci ?
 ```typescript
 WorktreeManager.createSessionWorktree(projectDir, sessionId)
   → called by Session.initializeWorkspace()
@@ -50,22 +37,22 @@ WorktreeManager.createSessionWorktree(projectDir, sessionId)
   → called by test at Project.create()
 ```
 
-### 4. Keep Tracing Up
-**What value was passed?**
-- `projectDir = ''` (empty string!)
-- Empty string as `cwd` resolves to `process.cwd()`
-- That's the source code directory!
+### 4. Continue de remonter
+**Quelle valeur a été passée ?**
+- `projectDir = ''` (chaîne vide !)
+- Une chaîne vide comme `cwd` se résout en `process.cwd()`
+- C'est le répertoire du code source !
 
-### 5. Find Original Trigger
-**Where did empty string come from?**
+### 5. Trouve le déclencheur d'origine
+**D'où venait la chaîne vide ?**
 ```typescript
 const context = setupCoreTest(); // Returns { tempDir: '' }
 Project.create('name', context.tempDir); // Accessed before beforeEach!
 ```
 
-## Adding Stack Traces
+## Ajouter des stack traces
 
-When you can't trace manually, add instrumentation:
+Quand tu ne peux pas tracer manuellement, ajoute de l'instrumentation :
 
 ```typescript
 // Before the problematic operation
@@ -82,88 +69,66 @@ async function gitInit(directory: string) {
 }
 ```
 
-**Critical:** Use `console.error()` in tests (not logger - may not show)
+**Critique :** utilise `console.error()` dans les tests (pas le logger — il peut ne pas s'afficher).
 
-**Run and capture:**
+**Lance et capture :**
 ```bash
 npm test 2>&1 | grep 'DEBUG git init'
 ```
 
-**Analyze stack traces:**
-- Look for test file names
-- Find the line number triggering the call
-- Identify the pattern (same test? same parameter?)
+**Analyse les stack traces :**
+- Cherche les noms de fichiers de test
+- Trouve le numéro de ligne qui déclenche l'appel
+- Identifie le pattern (même test ? même paramètre ?)
 
-## Finding Which Test Causes Pollution
+## Trouver quel test cause la pollution
 
-If something appears during tests but you don't know which test:
+Si quelque chose apparaît durant les tests mais que tu ne sais pas quel test :
 
-Use the bisection script `find-polluter.sh` in this directory:
+Utilise le script de bissection `find-polluter.sh` de ce répertoire :
 
 ```bash
 ./find-polluter.sh '.git' 'src/**/*.test.ts'
 ```
 
-Runs tests one-by-one, stops at first polluter. See script for usage.
+Lance les tests un par un, s'arrête au premier pollueur. Voir le script pour l'usage.
 
-## Real Example: Empty projectDir
+## Exemple réel : projectDir vide
 
-**Symptom:** `.git` created in `packages/core/` (source code)
+**Symptôme :** `.git` créé dans `packages/core/` (code source)
 
-**Trace chain:**
-1. `git init` runs in `process.cwd()` ← empty cwd parameter
-2. WorktreeManager called with empty projectDir
-3. Session.create() passed empty string
-4. Test accessed `context.tempDir` before beforeEach
-5. setupCoreTest() returns `{ tempDir: '' }` initially
+**Chaîne de traçage :**
+1. `git init` s'exécute dans `process.cwd()` ← paramètre cwd vide
+2. WorktreeManager appelé avec un projectDir vide
+3. Session.create() a passé une chaîne vide
+4. Le test a accédé à `context.tempDir` avant beforeEach
+5. setupCoreTest() renvoie `{ tempDir: '' }` initialement
 
-**Root cause:** Top-level variable initialization accessing empty value
+**Cause racine :** initialisation de variable au niveau du module accédant à une valeur vide
 
-**Fix:** Made tempDir a getter that throws if accessed before beforeEach
+**Correction :** fait de tempDir un getter qui lève une erreur s'il est accédé avant beforeEach
 
-**Also added defense-in-depth:**
-- Layer 1: Project.create() validates directory
-- Layer 2: WorkspaceManager validates not empty
-- Layer 3: NODE_ENV guard refuses git init outside tmpdir
-- Layer 4: Stack trace logging before git init
+**Défense en profondeur ajoutée en plus :**
+- Couche 1 : Project.create() valide le répertoire
+- Couche 2 : WorkspaceManager valide qu'il n'est pas vide
+- Couche 3 : garde NODE_ENV qui refuse git init hors de tmpdir
+- Couche 4 : journalisation de la stack trace avant git init
 
-## Key Principle
+## Principe clé
 
-```dot
-digraph principle {
-    "Found immediate cause" [shape=ellipse];
-    "Can trace one level up?" [shape=diamond];
-    "Trace backwards" [shape=box];
-    "Is this the source?" [shape=diamond];
-    "Fix at source" [shape=box];
-    "Add validation at each layer" [shape=box];
-    "Bug impossible" [shape=doublecircle];
-    "NEVER fix just the symptom" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
+Une fois la cause immédiate trouvée, remonte niveau par niveau tant que ce n'est pas la source ; à la source, corrige puis ajoute une validation à chaque couche pour rendre le bug impossible. **Ne corrige JAMAIS uniquement là où l'erreur apparaît.** Remonte jusqu'au déclencheur d'origine.
 
-    "Found immediate cause" -> "Can trace one level up?";
-    "Can trace one level up?" -> "Trace backwards" [label="yes"];
-    "Can trace one level up?" -> "NEVER fix just the symptom" [label="no"];
-    "Trace backwards" -> "Is this the source?";
-    "Is this the source?" -> "Trace backwards" [label="no - keeps going"];
-    "Is this the source?" -> "Fix at source" [label="yes"];
-    "Fix at source" -> "Add validation at each layer";
-    "Add validation at each layer" -> "Bug impossible";
-}
-```
+## Astuces de stack trace
 
-**NEVER fix just where the error appears.** Trace back to find the original trigger.
+**Dans les tests :** utilise `console.error()` et non le logger — le logger peut être supprimé
+**Avant l'opération :** journalise avant l'opération dangereuse, pas après son échec
+**Inclus le contexte :** répertoire, cwd, variables d'environnement, timestamps
+**Capture la pile :** `new Error().stack` montre la chaîne d'appels complète
 
-## Stack Trace Tips
+## Impact concret
 
-**In tests:** Use `console.error()` not logger - logger may be suppressed
-**Before operation:** Log before the dangerous operation, not after it fails
-**Include context:** Directory, cwd, environment variables, timestamps
-**Capture stack:** `new Error().stack` shows complete call chain
-
-## Real-World Impact
-
-From debugging session (2025-10-03):
-- Found root cause through 5-level trace
-- Fixed at source (getter validation)
-- Added 4 layers of defense
-- 1847 tests passed, zero pollution
+D'une session de débogage (2025-10-03) :
+- Cause racine trouvée via un traçage sur 5 niveaux
+- Corrigé à la source (validation par getter)
+- 4 couches de défense ajoutées
+- 1847 tests passés, zéro pollution
