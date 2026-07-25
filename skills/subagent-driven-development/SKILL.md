@@ -1,6 +1,6 @@
 ---
 name: subagent-driven-development
-description: Use when executing implementation plans with independent tasks in the current session
+description: Use ONLY for large implementation plans with many independent tasks, and only when your human partner explicitly asks for subagent execution - dispatches a fresh subagent per task, which is token-intensive (opt-in). For ordinary plans, execute them yourself.
 ---
 
 # Subagent-Driven Development

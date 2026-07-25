@@ -1,6 +1,6 @@
 ---
 name: dispatching-parallel-agents
-description: Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies
+description: Use ONLY when your human partner explicitly asks for parallel agents, or for a genuinely large batch of independent failures - fanning out subagents duplicates context and is token-intensive (opt-in). For a handful of tasks, handle them yourself.
 ---
 
 # Dispatching Parallel Agents
