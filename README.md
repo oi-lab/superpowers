@@ -1,163 +1,141 @@
 # Superpowers
 
-Superpowers is a complete software development methodology for your coding agents, built on top of a set of composable skills and some initial instructions that make sure your agent uses them.
+Superpowers est une méthodologie de développement logiciel complète pour tes agents
+de code, bâtie sur un ensemble de skills composables et quelques instructions
+initiales qui garantissent que l'agent les utilise.
 
+> **Fork personnel (oi-lab).** Ce fork est optimisé pour réduire la consommation de
+> tokens et faciliter la relecture :
+> - Cible **Claude Code et Antigravity uniquement** — le support des autres harnais
+>   (Codex, Cursor, Copilot, Gemini, Kimi, OpenCode, Pi) a été retiré.
+> - **Zéro télémétrie** : plus aucun asset distant ni appel sortant.
+> - Skill **`communication-compacte`** actif par défaut (sortie dense, précision
+>   technique préservée).
+> - Déclenchement des skills **proportionné à la tâche** (les tâches triviales ne
+>   passent pas par un workflow lourd ; les sous-agents parallèles sont opt-in).
+> - Contenu des skills **traduit en français**.
 
-## We're Hiring!
+## Comment ça marche
 
-We're hiring someone to help out full time with Superpowers community and code work. 
-You can read about the job at https://primeradiant.com/jobs/superpowers-community-engineer/
-If this sounds like someone you know, definitely send them our way.
+Dès que tu lances ton agent de code et qu'il voit que tu construis quelque chose, il
+ne se jette *pas* sur le code. Il prend du recul et cherche à comprendre ce que tu
+veux vraiment faire. Une fois une spec dégagée de la conversation, il te la présente
+par morceaux assez courts pour être lus.
 
-## Quickstart
-
-Give your agent Superpowers: [Claude Code](#claude-code), [Antigravity](#antigravity).
-
-> **Fork note:** this fork targets **Claude Code and Antigravity only**. Support for
-> other harnesses (Codex, Cursor, Copilot, Gemini, Kimi, OpenCode, Pi) has been
-> removed, along with the visual-companion remote-logo telemetry.
-
-## How it works
-
-It starts from the moment you fire up your coding agent. As soon as it sees that you're building something, it *doesn't* just jump into trying to write code. Instead, it steps back and asks you what you're really trying to do. 
-
-Once it's teased a spec out of the conversation, it shows it to you in chunks short enough to actually read and digest. 
-
-After you've signed off on the design, your agent puts together an implementation plan that's clear enough for an enthusiastic junior engineer with poor taste, no judgement, no project context, and an aversion to testing to follow. It emphasizes true red/green TDD, YAGNI (You Aren't Gonna Need It), and DRY. 
-
-Next up, once you say "go", it launches a *subagent-driven-development* process, having agents work through each engineering task, inspecting and reviewing their work, and continuing forward. It's not uncommon for your agent to work autonomously for a couple hours at a time without deviating from the plan you put together.
-
-There's a bunch more to it, but that's the core of the system. And because the skills trigger automatically, you don't need to do anything special. Your coding agent just has Superpowers.
-
-## Commercial Services
-
-If you're using Superpowers in enterprise and could benefit from commercial support, additional tooling, or managed spending, please don't hesitate to drop us a line at sales@primeradiant.com.
+Après ta validation du design, l'agent produit un plan d'implémentation assez clair
+pour être suivi à la lettre, en insistant sur le TDD rouge/vert, YAGNI et DRY. Puis,
+sur ton « go », il exécute — en solo pour l'ordinaire, ou via des sous-agents pour
+les gros plans (opt-in). Les skills se déclenchent automatiquement, proportionnés à
+l'ampleur de la tâche.
 
 ## Installation
 
 ### Claude Code
 
-Superpowers is available via the [official Claude plugin marketplace](https://claude.com/plugins/superpowers)
+Superpowers est disponible via le [marketplace officiel des plugins Claude](https://claude.com/plugins/superpowers).
 
-#### Official Marketplace
+#### Marketplace officiel
 
-- Install the plugin from Anthropic's official marketplace:
+```bash
+/plugin install superpowers@claude-plugins-official
+```
 
-  ```bash
-  /plugin install superpowers@claude-plugins-official
-  ```
+#### Marketplace Superpowers
 
-#### Superpowers Marketplace
+```bash
+/plugin marketplace add obra/superpowers-marketplace
+/plugin install superpowers@superpowers-marketplace
+```
 
-The Superpowers marketplace provides Superpowers and some other related plugins for Claude Code.
-
-- Register the marketplace:
-
-  ```bash
-  /plugin marketplace add obra/superpowers-marketplace
-  ```
-
-- Install the plugin from this marketplace:
-
-  ```bash
-  /plugin install superpowers@superpowers-marketplace
-  ```
+> Pour installer CE fork, utilise ton propre marketplace/dépôt pointant sur
+> `oi-lab/superpowers` plutôt que le dépôt upstream.
 
 ### Antigravity
 
-Install Superpowers as a plugin from this repository:
+Installe Superpowers comme plugin depuis ce dépôt :
 
 ```bash
-agy plugin install https://github.com/obra/superpowers
+agy plugin install https://github.com/oi-lab/superpowers
 ```
 
-Antigravity runs the plugin's session-start hook, so Superpowers is active from
-the first message. Reinstall with the same command to update.
+Antigravity exécute le hook `session-start` du plugin, donc Superpowers est actif dès
+le premier message. Réinstalle avec la même commande pour mettre à jour.
 
-## The Basic Workflow
+## Le workflow de base
 
-1. **brainstorming** - Activates before writing code. Refines rough ideas through questions, explores alternatives, presents design in sections for validation. Saves design document.
+1. **brainstorming** — avant d'écrire du code. Affine l'idée par questions, explore
+   les alternatives, présente le design par sections. La profondeur s'adapte à la
+   tâche (une phrase pour un petit changement, un document pour un système).
+2. **using-git-worktrees** — après l'approbation du design. Crée un espace de travail
+   isolé sur une nouvelle branche, lance le setup, vérifie une baseline de tests propre.
+3. **writing-plans** — avec le design approuvé. Découpe le travail en tâches en petites
+   bouchées, chacune avec chemins exacts, code complet, étapes de vérification.
+4. **subagent-driven-development** (opt-in) ou **executing-plans** — exécute le plan.
+   Sous-agent par tâche avec revue en deux étapes, ou exécution par lots avec points
+   de contrôle humains.
+5. **test-driven-development** — pendant l'implémentation. Impose RED-GREEN-REFACTOR.
+6. **requesting-code-review** / **receiving-code-review** — entre les tâches.
+7. **finishing-a-development-branch** — quand les tâches sont finies. Vérifie les
+   tests, présente les options (merge/PR/garder/jeter), nettoie le worktree.
 
-2. **using-git-worktrees** - Activates after design approval. Creates isolated workspace on new branch, runs project setup, verifies clean test baseline.
+## Ce qu'il y a dedans
 
-3. **writing-plans** - Activates with approved design. Breaks work into bite-sized tasks (2-5 minutes each). Every task has exact file paths, complete code, verification steps.
+### Bibliothèque de skills
 
-4. **subagent-driven-development** or **executing-plans** - Activates with plan. Dispatches fresh subagent per task with two-stage review (spec compliance, then code quality), or executes in batches with human checkpoints.
+**Communication**
+- **communication-compacte** — mode de sortie compact par défaut (spécifique à ce fork)
 
-5. **test-driven-development** - Activates during implementation. Enforces RED-GREEN-REFACTOR: write failing test, watch it fail, write minimal code, watch it pass, commit. Deletes code written before tests.
+**Bootstrap**
+- **using-superpowers** — introduction au système de skills, règle de déclenchement proportionné
 
-6. **requesting-code-review** - Activates between tasks. Reviews against plan, reports issues by severity. Critical issues block progress.
+**Tests**
+- **test-driven-development** — cycle RED-GREEN-REFACTOR
 
-7. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard), cleans up worktree.
+**Débogage**
+- **systematic-debugging** — recherche de cause racine en 4 phases
+- **verification-before-completion** — vérifier que c'est réellement corrigé
 
-**The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
+**Collaboration**
+- **brainstorming** — affinage de design par le dialogue
+- **writing-plans** / **executing-plans** — plans d'implémentation détaillés / exécution par lots
+- **dispatching-parallel-agents** — workflows de sous-agents concurrents (opt-in)
+- **requesting-code-review** / **receiving-code-review** — demander / recevoir une revue
+- **using-git-worktrees** — branches de dev parallèles
+- **finishing-a-development-branch** — décision merge/PR
+- **subagent-driven-development** — itération rapide avec revue en deux étapes (opt-in)
 
-## What's Inside
+**Méta**
+- **writing-skills** — créer de nouveaux skills
 
-### Skills Library
+## Philosophie
 
-**Testing**
-- **test-driven-development** - RED-GREEN-REFACTOR cycle (includes testing anti-patterns reference)
+- **Test-Driven Development** — écrire les tests d'abord
+- **Systématique plutôt qu'ad hoc** — le process plutôt que la devinette
+- **Réduction de complexité** — la simplicité comme objectif premier
+- **Preuve plutôt qu'affirmation** — vérifier avant de déclarer le succès
+- **Proportionnalité** — l'effort du process s'adapte à l'ampleur de la tâche
 
-**Debugging**
-- **systematic-debugging** - 4-phase root cause process (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
-- **verification-before-completion** - Ensure it's actually fixed
+## Tests
 
-**Collaboration** 
-- **brainstorming** - Socratic design refinement
-- **writing-plans** - Detailed implementation plans
-- **executing-plans** - Batch execution with checkpoints
-- **dispatching-parallel-agents** - Concurrent subagent workflows
-- **requesting-code-review** - Pre-review checklist
-- **receiving-code-review** - Responding to feedback
-- **using-git-worktrees** - Parallel development branches
-- **finishing-a-development-branch** - Merge/PR decision workflow
-- **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
+- **`tests/`** — le code non-LLM du plugin fonctionne-t-il ? Tests d'intégration
+  bash/node pour le serveur brainstorm et les utilitaires. Voir `docs/testing.md`.
+- **`evals/`** — les agents se comportent-ils correctement sur de vraies sessions LLM ?
+  Harnais `drill` pilotant de vraies sessions Claude Code.
 
-**Meta**
-- **writing-skills** - Create new skills following best practices (includes testing methodology)
-- **using-superpowers** - Introduction to the skills system
+## Télémétrie
 
-## Philosophy
+Aucune. Ce fork ne charge aucun asset distant et ne fait aucun appel sortant. Le
+branding du compagnon visuel est en texte seul, entièrement autonome.
 
-- **Test-Driven Development** - Write tests first, always
-- **Systematic over ad-hoc** - Process over guessing
-- **Complexity reduction** - Simplicity as primary goal
-- **Evidence over claims** - Verify before declaring success
+## Licence
 
-Read [the original release announcement](https://blog.fsck.com/2025/10/09/superpowers/).
+Licence MIT — voir le fichier LICENSE.
 
-## Contributing
+## Crédits
 
-The general contribution process for Superpowers is below. Keep in mind that we don't generally accept contributions of new skills and that any updates to skills must work across the coding agents we support (Claude Code and Antigravity).
+Superpowers est créé à l'origine par [Jesse Vincent](https://blog.fsck.com) et
+l'équipe de [Prime Radiant](https://primeradiant.com). Ce dépôt en est un fork
+personnel (oi-lab) modifié pour un usage avec Claude Code.
 
-1. Fork the repository
-2. Switch to the 'dev' branch
-3. Create a branch for your work
-4. Follow the `writing-skills` skill for creating and testing new and modified skills
-5. Submit a PR, being sure to fill in the pull request template.
-
-Skill-behavior tests use the drill eval harness from [superpowers-evals](https://github.com/prime-radiant-inc/superpowers-evals/), cloned into `evals/` — see `evals/README.md` for setup. Plugin-infrastructure tests live at `tests/` and run via the relevant `run-*.sh` or `npm test`.
-
-See `skills/writing-skills/SKILL.md` for the complete guide.
-
-## Updating
-
-Superpowers updates are somewhat coding-agent dependent, but are often automatic.
-
-## License
-
-MIT License - see LICENSE file for details
-
-## Telemetry
-
-None. This fork loads no remote assets and makes no outbound calls. The visual
-companion's branding is text-only and fully self-contained.
-
-## Community
-
-Superpowers is built by [Jesse Vincent](https://blog.fsck.com) and the rest of the folks at [Prime Radiant](https://primeradiant.com).
-
-- **Discord**: [Join us](https://discord.gg/35wsABTejz) for community support, questions, and sharing what you're building with Superpowers
-- **Issues**: https://github.com/obra/superpowers/issues
-- **Release announcements**: [Sign up](https://primeradiant.com/superpowers/) to get notified about new versions
+- Projet d'origine : https://github.com/obra/superpowers
+- Annonce de sortie : https://blog.fsck.com/2025/10/09/superpowers/
