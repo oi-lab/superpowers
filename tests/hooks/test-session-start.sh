@@ -152,6 +152,16 @@ assert_command_output \
     CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
     bash "$HOOK_UNDER_TEST"
 
+compact_home="$(make_home compact-mode)"
+assert_command_output \
+    "SessionStart injects the communication-compacte default output mode" \
+    "nested" \
+    "communication-compacte" \
+    "" \
+    "$compact_home" \
+    CLAUDE_PLUGIN_ROOT="$REPO_ROOT" \
+    bash "$HOOK_UNDER_TEST"
+
 wrapper_home="$(make_home run-hook-wrapper)"
 assert_command_output \
     "run-hook.cmd wrapper dispatches to the named session-start script" \

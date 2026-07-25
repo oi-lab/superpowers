@@ -10,6 +10,9 @@ PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 # Read using-superpowers content
 using_superpowers_content=$(cat "${PLUGIN_ROOT}/skills/using-superpowers/SKILL.md" 2>&1 || echo "Error reading using-superpowers skill")
 
+# Read communication-compacte content (default ultra-compact output mode)
+communication_compacte_content=$(cat "${PLUGIN_ROOT}/skills/communication-compacte/SKILL.md" 2>&1 || echo "Error reading communication-compacte skill")
+
 # Escape string for JSON embedding using bash parameter substitution.
 # Each ${s//old/new} is a single C-level pass - orders of magnitude
 # faster than the character-by-character loop this replaces.
@@ -24,7 +27,8 @@ escape_for_json() {
 }
 
 using_superpowers_escaped=$(escape_for_json "$using_superpowers_content")
-session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_superpowers_escaped}\n</EXTREMELY_IMPORTANT>"
+communication_compacte_escaped=$(escape_for_json "$communication_compacte_content")
+session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_superpowers_escaped}\n\n**Below is your 'superpowers:communication-compacte' skill - your default output mode. Apply it to everything you write to your human partner, from this first message on:**\n\n${communication_compacte_escaped}\n</EXTREMELY_IMPORTANT>"
 
 # Output context injection as JSON.
 # Claude Code hooks expect hookSpecificOutput.additionalContext (nested).
